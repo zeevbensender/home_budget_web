@@ -5,6 +5,8 @@ services:
     plan: free
     buildCommand: |
       pip install poetry
+      pwd
+      ls -l
       cd backend
       poetry install --no-root
     startCommand: |
