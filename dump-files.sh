@@ -1,0 +1,1 @@
+git ls-files | xargs -d $'\n' bash -c 'for arg do echo "**************** $arg **********************"; cat $arg; echo "EOF"; done'

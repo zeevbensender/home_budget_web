@@ -1,0 +1,48 @@
+# =========================================
+# Home Budget Web — Backend Docker Ignore
+# Milestone 1: FastAPI + PostgreSQL backend
+# =========================================
+
+# Byte-compiled / cache files
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environments
+venv/
+.vnv*/
+.vscode/
+.idea/
+.env
+.env.*
+*.env
+
+# Dependency caches
+*.egg-info/
+poetry.lock
+pip-wheel-metadata/
+
+# Build and test artifacts
+dist/
+build/
+.coverage
+.pytest_cache/
+htmlcov/
+.mypy_cache/
+
+# Logs
+*.log
+
+# Git and local dev files
+.git/
+.gitignore
+*.md
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Docker / Compose context cleanup
+docker-compose.yml
+Dockerfile

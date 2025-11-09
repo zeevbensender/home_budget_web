@@ -17,6 +17,8 @@ pandas = "^2.2"
 alembic = "^1.13"
 pydantic-settings = "^2.2"
 python-dotenv = "^1.0"
+python-jose = {extras = ["cryptography"], version = "^3.3"}
+passlib = {extras = ["bcrypt"], version = "^1.7"}
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3"
