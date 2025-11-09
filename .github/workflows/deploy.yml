@@ -45,7 +45,7 @@ jobs:
       # ----------------------------
       - name: Run tests
         working-directory: backend
-        run: poetry run pytest -v || echo "⚠️ Tests skipped or not yet implemented"
+        run: PYTHONPATH=$PYTHONPATH:$(pwd) poetry run pytest -v || echo "⚠️ Tests skipped or not yet implemented"
 
       # ----------------------------
       # 6️⃣  Export requirements.txt
