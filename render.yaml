@@ -1,38 +1,22 @@
-# ==========================================
-# Home Budget Web — Render Blueprint
-# ==========================================
-# This file defines your Render services and databases.
-# Deploy it once to create linked infrastructure and CI/CD integration.
-# ==========================================
-
 services:
-  # ------------------------------------------
-  # Backend Service (FastAPI + PostgreSQL)
-  # ------------------------------------------
   - type: web
     name: home-budget-backend
-    env: docker
-    plan: free                      # or "starter" for more resources
-    region: frankfurt               # choose the closest region (e.g., frankfurt, oregon, singapore)
-    rootDir: backend
-    dockerfilePath: backend/Dockerfile
+    env: python
+    plan: free
+    buildCommand: |
+      # Ensure Poetry is available
+      pip install poetry
+      # Install project dependencies
+      poetry install --no-root
+    startCommand: |
+      poetry run uvicorn app.main:app --host 0.0.0.0 --port $PORT
     envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
       - key: DATABASE_URL
         fromDatabase:
           name: home-budget-db
           property: connectionString
-      - key: ENV
-        value: production
-      - key: HOST
-        value: 0.0.0.0
-      - key: PORT
-        value: 8000
-
 databases:
-  # ------------------------------------------
-  # PostgreSQL Database
-  # ------------------------------------------
   - name: home-budget-db
-    databaseName: budget_db
     plan: free
-    region: frankfurt
