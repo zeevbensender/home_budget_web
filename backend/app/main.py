@@ -1,13 +1,19 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
-from .routers import expense_router, income_router
-from .core.db import init_db
+from .routers import expense_router, income_router, health_router
+# from .core.db import init_db
 
-app = FastAPI(title="Home Budget Web API")
+# Use FastAPI lifespan instead of on_event hooks
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup actions
+    # init_db()
+    yield
+    # Shutdown actions (if needed later)
 
-@app.on_event("startup")
-def startup():
-    init_db()
+app = FastAPI(title="Home Budget Web API", lifespan=lifespan)
 
-app.include_router(expense_router.router, prefix="/api/expenses", tags=["Expenses"])
-app.include_router(income_router.router, prefix="/api/incomes", tags=["Incomes"])
-
+# Register routers
+# app.include_router(expense_router.router, prefix="/api/expenses", tags=["Expenses"])
+# app.include_router(income_router.router, prefix="/api/incomes", tags=["Incomes"])
+app.include_router(health_router.router, prefix="/api", tags=["Health"])
