@@ -22,6 +22,7 @@ python-dotenv = "^1.0"
 pytest = "^8.3"
 black = "^24.8"
 isort = "^5.13"
+httpx = "^0.28"
 
 [build-system]
 requires = ["poetry-core"]
