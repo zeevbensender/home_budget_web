@@ -67,7 +67,7 @@ backend/
 
 ### 2. Clone the repository
 ```bash
-git clone https://github.com/<your-user>/home_budget_web.git
+git clone https://github.com/zeevbensender/home_budget_web.git
 cd home_budget_web/backend
 ```
 

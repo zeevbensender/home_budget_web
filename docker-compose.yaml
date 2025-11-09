@@ -1,0 +1,46 @@
+services:
+  # ----------------------------------
+  # PostgreSQL Database
+  # ----------------------------------
+  db:
+    image: postgres:15
+    container_name: home_budget_db
+    restart: always
+    environment:
+      POSTGRES_USER: budget
+      POSTGRES_PASSWORD: budget
+      POSTGRES_DB: budget_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # ----------------------------------
+  # FastAPI Backend
+  # ----------------------------------
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: home_budget_backend
+    restart: always
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: postgresql://budget:budget@db:5432/budget_db
+      ENV: dev
+      HOST: 0.0.0.0
+      PORT: 8000
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend/app:/app/app    # hot-reload in development
+    command: >
+      uvicorn app.main:app
+      --host 0.0.0.0
+      --port 8000
+      --reload
+
+volumes:
+  postgres_data:
+
