@@ -1,0 +1,29 @@
+[tool.poetry]
+name = "home-budget-backend"
+version = "0.1.0"
+description = "FastAPI backend for Home Budget Web"
+authors = ["Zeev Ben Sender <your.email@example.com>"]
+license = "MIT"
+readme = "README.md"
+packages = [{ include = "app" }]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+fastapi = "^0.115"
+uvicorn = { extras = ["standard"], version = "^0.30" }
+sqlalchemy = "^2.0"
+psycopg2-binary = "^2.9"
+pandas = "^2.2"
+alembic = "^1.13"
+pydantic-settings = "^2.2"
+python-dotenv = "^1.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3"
+black = "^24.8"
+isort = "^5.13"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
