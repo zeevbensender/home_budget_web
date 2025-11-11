@@ -48,6 +48,12 @@ jobs:
         run: PYTHONPATH=$PYTHONPATH:$(pwd) poetry run pytest -v || echo "⚠️ Tests skipped or not yet implemented"
 
       # ----------------------------
+      # 5️⃣.1️⃣  Build Frontend (minimal check)
+      # ----------------------------
+      - name: Build frontend (minimal check)
+        run: docker build -t homebudget-frontend ./frontend
+
+      # ----------------------------
       # 6️⃣  Export requirements.txt
       # ----------------------------
       - name: Export requirements.txt for deployment
