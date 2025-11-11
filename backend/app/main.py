@@ -1,19 +1,33 @@
-from contextlib import asynccontextmanager
 from fastapi import FastAPI
-from .routers import expense_router, income_router, health_router
-# from .core.db import init_db
+from fastapi.middleware.cors import CORSMiddleware
 
-# Use FastAPI lifespan instead of on_event hooks
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # Startup actions
-    # init_db()
-    yield
-    # Shutdown actions (if needed later)
+from app.routers import health_router, expense_router, income_router
 
-app = FastAPI(title="Home Budget Web API", lifespan=lifespan)
+# Create FastAPI instance
+app = FastAPI(title="Home Budget Web API")
 
-# Register routers
-# app.include_router(expense_router.router, prefix="/api/expenses", tags=["Expenses"])
-# app.include_router(income_router.router, prefix="/api/incomes", tags=["Incomes"])
-app.include_router(health_router.router, prefix="/api", tags=["Health"])
+# --- CORS middleware ---
+# Allows frontend (port 5080 or any domain) to access the backend
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # You can later restrict this list
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# --- Routers ---
+app.include_router(health_router.router, prefix="/api", tags=["health"])
+app.include_router(expense_router.router, prefix="/api", tags=["expenses"])
+app.include_router(income_router.router, prefix="/api", tags=["income"])
+
+# --- Root route (optional, for sanity check) ---
+@app.get("/")
+def root():
+    return {"message": "Home Budget Web backend running"}
+
+
+# --- Entry point (for local dev only) ---
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
