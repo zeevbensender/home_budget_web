@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { getHealth, getExpenses, getIncomes } from './api.js';
+import TableBudget from './TableBudget.jsx';
 
 function App() {
   const [health, setHealth] = useState('Loading...');
@@ -14,14 +15,14 @@ function App() {
 
   return (
     <div style={{ fontFamily: 'system-ui, sans-serif', padding: '2rem' }}>
-      <h1>Home Budget Web</h1>
+      <h1>HBW</h1>
       <p>Backend health: <strong>{health}</strong></p>
 
       <h2>Expenses</h2>
-      <pre>{JSON.stringify(expenses, null, 2)}</pre>
+      <TableBudget data={expenses} />
 
       <h2>Incomes</h2>
-      <pre>{JSON.stringify(incomes, null, 2)}</pre>
+      <TableBudget data={incomes} />
     </div>
   );
 }
