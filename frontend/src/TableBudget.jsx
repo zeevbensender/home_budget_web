@@ -9,61 +9,61 @@ export default function TableBudget({ data = [], type = 'expense' }) {
 
   const updateCell = (rowIndex, field, newValue) => {
     setRows(old =>
-      old.map((r, i) =>
-        i === rowIndex ? { ...r, [field]: newValue } : r
-      )
+      old.map((r, i) => (i === rowIndex ? { ...r, [field]: newValue } : r))
     )
   }
 
-  // 🧱 Define common + type-specific columns
+  // small inline editable cell generator
+  const editableCell = (field, formatter) => ({
+    header: field[0].toUpperCase() + field.slice(1),
+    cell: info => {
+      const rowIndex = info.row.index
+      const value = info.getValue()
+      const [editing, setEditing] = useState(false)
+      const [localValue, setLocalValue] = useState(value ?? '')
+
+      const commit = () => {
+        setEditing(false)
+        updateCell(rowIndex, field, formatter ? formatter(localValue) : localValue)
+      }
+
+      return editing ? (
+        <input
+          type="text"
+          value={localValue}
+          autoFocus
+          onChange={e => setLocalValue(e.target.value)}
+          onBlur={commit}
+          onKeyDown={e => e.key === 'Enter' && commit()}
+          style={{ width: '100%', boxSizing: 'border-box' }}
+        />
+      ) : (
+        <span onClick={() => setEditing(true)} style={{ cursor: 'pointer' }}>
+          {value ?? ''}
+        </span>
+      )
+    },
+  })
+
   const columns = useMemo(() => {
-    const common = [
-      columnHelper.accessor('date', { header: 'Date' }),
-      columnHelper.accessor('category', { header: 'Category' }),
-      columnHelper.accessor('amount', {
-        header: 'Amount',
-        cell: info => {
-          const rowIndex = info.row.index
-          const value = info.getValue()
-          const [editing, setEditing] = useState(false)
-          const [localValue, setLocalValue] = useState(value)
-
-          const commit = () => {
-            setEditing(false)
-            updateCell(rowIndex, 'amount', parseFloat(localValue) || 0)
-          }
-
-          return editing ? (
-            <input
-              type="number"
-              value={localValue}
-              autoFocus
-              onChange={e => setLocalValue(e.target.value)}
-              onBlur={commit}
-              onKeyDown={e => e.key === 'Enter' && commit()}
-              style={{ width: '80px' }}
-            />
-          ) : (
-            <span onClick={() => setEditing(true)} style={{ cursor: 'pointer' }}>
-              {Number(value).toFixed(2)}
-            </span>
-          )
-        },
-      }),
-      columnHelper.accessor('account', { header: 'Account' }),
-      columnHelper.accessor('currency', {
-        header: 'Currency',
-        cell: info => info.getValue() || '₪',
-      }),
-      columnHelper.accessor('notes', { header: 'Notes' }),
+    const base = [
+      columnHelper.accessor('date', editableCell('date')),
+      ...(type === 'expense'
+        ? [columnHelper.accessor('business', editableCell('business'))]
+        : []),
+      columnHelper.accessor('category', editableCell('category')),
+      columnHelper.accessor(
+        'amount',
+        editableCell('amount', v => parseFloat(v) || 0)
+      ),
+      columnHelper.accessor('account', editableCell('account')),
+      columnHelper.accessor(
+        'currency',
+        editableCell('currency', v => v || '₪')
+      ),
+      columnHelper.accessor('notes', editableCell('notes')),
     ]
-
-    // Expense-specific extra column
-    if (type === 'expense') {
-      common.splice(1, 0, columnHelper.accessor('business', { header: 'Business' }))
-    }
-
-    return common
+    return base
   }, [type])
 
   const table = useReactTable({
@@ -79,7 +79,14 @@ export default function TableBudget({ data = [], type = 'expense' }) {
           {table.getHeaderGroups().map(hg => (
             <tr key={hg.id}>
               {hg.headers.map(header => (
-                <th key={header.id} style={{ textAlign:'left', borderBottom:'1px solid #ddd', padding:'8px' }}>
+                <th
+                  key={header.id}
+                  style={{
+                    textAlign: 'left',
+                    borderBottom: '1px solid #ddd',
+                    padding: '8px',
+                  }}
+                >
                   {flexRender(header.column.columnDef.header, header.getContext())}
                 </th>
               ))}
@@ -90,7 +97,13 @@ export default function TableBudget({ data = [], type = 'expense' }) {
           {table.getRowModel().rows.map(row => (
             <tr key={row.id}>
               {row.getVisibleCells().map(cell => (
-                <td key={cell.id} style={{ borderBottom:'1px solid #f0f0f0', padding:'8px' }}>
+                <td
+                  key={cell.id}
+                  style={{
+                    borderBottom: '1px solid #f0f0f0',
+                    padding: '8px',
+                  }}
+                >
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}
                 </td>
               ))}
