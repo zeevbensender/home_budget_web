@@ -3,23 +3,21 @@ import { createColumnHelper, useReactTable, getCoreRowModel, flexRender } from '
 
 const columnHelper = createColumnHelper()
 
-export default function TableBudget({ data }) {
-  const [rows, setRows] = useState(data || [])
-// 🔧 keep rows in sync when parent updates data
-  useEffect(() => {
-    setRows(data || [])
-  }, [data])
+export default function TableBudget({ data = [], type = 'expense' }) {
+  const [rows, setRows] = useState(data)
+  useEffect(() => setRows(data), [data])
 
-  const updateAmount = (rowIndex, newValue) => {
+  const updateCell = (rowIndex, field, newValue) => {
     setRows(old =>
       old.map((r, i) =>
-        i === rowIndex ? { ...r, amount: parseFloat(newValue) || 0 } : r
+        i === rowIndex ? { ...r, [field]: newValue } : r
       )
     )
   }
 
-  const columns = useMemo(
-    () => [
+  // 🧱 Define common + type-specific columns
+  const columns = useMemo(() => {
+    const common = [
       columnHelper.accessor('date', { header: 'Date' }),
       columnHelper.accessor('category', { header: 'Category' }),
       columnHelper.accessor('amount', {
@@ -32,7 +30,7 @@ export default function TableBudget({ data }) {
 
           const commit = () => {
             setEditing(false)
-            updateAmount(rowIndex, localValue)
+            updateCell(rowIndex, 'amount', parseFloat(localValue) || 0)
           }
 
           return editing ? (
@@ -52,9 +50,21 @@ export default function TableBudget({ data }) {
           )
         },
       }),
-    ],
-    []
-  )
+      columnHelper.accessor('account', { header: 'Account' }),
+      columnHelper.accessor('currency', {
+        header: 'Currency',
+        cell: info => info.getValue() || '₪',
+      }),
+      columnHelper.accessor('notes', { header: 'Notes' }),
+    ]
+
+    // Expense-specific extra column
+    if (type === 'expense') {
+      common.splice(1, 0, columnHelper.accessor('business', { header: 'Business' }))
+    }
+
+    return common
+  }, [type])
 
   const table = useReactTable({
     data: rows,

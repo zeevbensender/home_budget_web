@@ -19,10 +19,10 @@ function App() {
       <p>Backend health: <strong>{health}</strong></p>
 
       <h2>Expenses</h2>
-      <TableBudget data={expenses} />
+      <TableBudget data={expenses} type="expense" />
 
       <h2>Incomes</h2>
-      <TableBudget data={incomes} />
+      <TableBudget data={incomes} type="income" />
     </div>
   );
 }
