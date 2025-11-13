@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { getHealth, getExpenses, getIncomes } from './api.js';
-import TableBudget from './TableBudget.jsx';
+import TableBudget from './components/TableBudget/TableBudget.jsx';
 
 function App() {
   const [health, setHealth] = useState('Loading...');
