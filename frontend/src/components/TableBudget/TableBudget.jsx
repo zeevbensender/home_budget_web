@@ -6,8 +6,22 @@ import {
 } from "@tanstack/react-table";
 import usePatchBackend from "./usePatchBackend.jsx";
 import { getColumns } from "./columns.jsx";
+import AddRow from "./AddRow.jsx";
 
-export default function TableBudget({ data = [], type = "expense" }) {
+/**
+ * Props:
+ * - data, type
+ * - showAdd (bool)           -> whether to display inline add-row
+ * - onCloseAdd()             -> parent closes add-mode
+ * - onCreateLocal?(row)      -> optional callback when created (local)
+ */
+export default function TableBudget({
+  data = [],
+  type = "expense",
+  showAdd = false,
+  onCloseAdd,
+  onCreateLocal,
+}) {
   const [rows, setRows] = useState(data);
   const patchBackend = usePatchBackend();
 
@@ -26,6 +40,12 @@ export default function TableBudget({ data = [], type = "expense" }) {
     });
   };
 
+  const addNewRowLocal = (row) => {
+    setRows((old) => [row, ...old]);          // add to top
+    onCreateLocal?.(row);
+    onCloseAdd?.();
+  };
+
   const columns = useMemo(() => getColumns(type, updateCell), [type]);
 
   const table = useReactTable({
@@ -33,6 +53,9 @@ export default function TableBudget({ data = [], type = "expense" }) {
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
+
+  // derive header cells count for AddRow spanning
+  const headerCount = table.getHeaderGroups()[0]?.headers?.length ?? 0;
 
   return (
     <div style={{ overflowX: "auto" }}>
@@ -55,10 +78,28 @@ export default function TableBudget({ data = [], type = "expense" }) {
                   )}
                 </th>
               ))}
+              {/* action column header when add-row is visible */}
+              {showAdd && (
+                <th
+                  style={{
+                    textAlign: "left",
+                    borderBottom: "1px solid #ddd",
+                    padding: "8px",
+                  }}
+                >
+                  Actions
+                </th>
+              )}
             </tr>
           ))}
         </thead>
+
         <tbody>
+          {/* Inline add-row at the very top */}
+          {showAdd && (
+            <AddRow type={type} onSave={addNewRowLocal} onCancel={onCloseAdd} />
+          )}
+
           {table.getRowModel().rows.map((row) => (
             <tr key={row.id}>
               {row.getVisibleCells().map((cell) => (
@@ -75,6 +116,8 @@ export default function TableBudget({ data = [], type = "expense" }) {
                   )}
                 </td>
               ))}
+              {/* filler cell for layout parity when add-row is visible */}
+              {showAdd && <td style={{ padding: "8px" }} />}
             </tr>
           ))}
         </tbody>
