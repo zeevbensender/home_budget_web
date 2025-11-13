@@ -8,13 +8,6 @@ import usePatchBackend from "./usePatchBackend.jsx";
 import { getColumns } from "./columns.jsx";
 import AddRow from "./AddRow.jsx";
 
-/**
- * Props:
- * - data, type
- * - showAdd (bool)           -> whether to display inline add-row
- * - onCloseAdd()             -> parent closes add-mode
- * - onCreateLocal?(row)      -> optional callback when created (local)
- */
 export default function TableBudget({
   data = [],
   type = "expense",
@@ -41,21 +34,17 @@ export default function TableBudget({
   };
 
   const addNewRowLocal = (row) => {
-    setRows((old) => [row, ...old]);          // add to top
+    setRows((old) => [...old, row]); // append at bottom
     onCreateLocal?.(row);
     onCloseAdd?.();
   };
 
   const columns = useMemo(() => getColumns(type, updateCell), [type]);
-
   const table = useReactTable({
     data: rows,
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
-
-  // derive header cells count for AddRow spanning
-  const headerCount = table.getHeaderGroups()[0]?.headers?.length ?? 0;
 
   return (
     <div style={{ overflowX: "auto" }}>
@@ -78,7 +67,6 @@ export default function TableBudget({
                   )}
                 </th>
               ))}
-              {/* action column header when add-row is visible */}
               {showAdd && (
                 <th
                   style={{
@@ -95,11 +83,6 @@ export default function TableBudget({
         </thead>
 
         <tbody>
-          {/* Inline add-row at the very top */}
-          {showAdd && (
-            <AddRow type={type} onSave={addNewRowLocal} onCancel={onCloseAdd} />
-          )}
-
           {table.getRowModel().rows.map((row) => (
             <tr key={row.id}>
               {row.getVisibleCells().map((cell) => (
@@ -116,12 +99,18 @@ export default function TableBudget({
                   )}
                 </td>
               ))}
-              {/* filler cell for layout parity when add-row is visible */}
               {showAdd && <td style={{ padding: "8px" }} />}
             </tr>
           ))}
         </tbody>
       </table>
+
+      {/* AddRow is rendered below table to avoid losing focus */}
+      {showAdd && (
+        <div style={{ marginTop: "10px" }}>
+          <AddRow type={type} onSave={addNewRowLocal} onCancel={onCloseAdd} />
+        </div>
+      )}
     </div>
   );
 }
