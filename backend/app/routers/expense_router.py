@@ -1,10 +1,11 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
+from app.core.storage import load_json, save_json
 
 router = APIRouter()
 
-# In-memory store (mock DB)
-expenses = [
+# Load from JSON or fallback demo data
+expenses = load_json("expenses.json", [
     {
         "id": 1,
         "date": "2025-11-01",
@@ -25,8 +26,7 @@ expenses = [
         "currency": "₪",
         "notes": "Bus to work",
     },
-]
-
+])
 
 class ExpenseCreate(BaseModel):
     date: str
@@ -37,11 +37,13 @@ class ExpenseCreate(BaseModel):
     currency: str
     notes: str | None = None
 
+class ExpenseUpdate(BaseModel):
+    field: str
+    value: str | float | None
 
 @router.get("/expense")
 def list_expenses():
     return expenses
-
 
 @router.post("/expense")
 def create_expense(expense: ExpenseCreate):
@@ -49,4 +51,16 @@ def create_expense(expense: ExpenseCreate):
     data = expense.dict()
     data["id"] = new_id
     expenses.append(data)
+    save_json("expenses.json", expenses)
     return {"status": "created", "expense": data}
+
+@router.patch("/expense/{expense_id}")
+def update_expense(expense_id: int, update: ExpenseUpdate):
+    for exp in expenses:
+        if exp["id"] == expense_id:
+            if update.field not in exp:
+                raise HTTPException(status_code=400, detail="Invalid field")
+            exp[update.field] = update.value
+            save_json("expenses.json", expenses)
+            return {"status": "updated", "expense": exp}
+    raise HTTPException(status_code=404, detail="Expense not found")
