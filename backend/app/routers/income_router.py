@@ -1,9 +1,9 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 from pydantic import BaseModel
 
 router = APIRouter()
 
-# Mock DB (temporary)
+# In-memory store (mock DB)
 incomes = [
     {
         "id": 1,
@@ -25,22 +25,25 @@ incomes = [
     },
 ]
 
+
+class IncomeCreate(BaseModel):
+    date: str
+    category: str
+    amount: float
+    account: str
+    currency: str
+    notes: str | None = None
+
+
 @router.get("/income")
-def get_incomes():
+def list_incomes():
     return incomes
 
 
-# ---- new part ----
-class IncomeUpdate(BaseModel):
-    field: str
-    value: str | float | None = None
-
-
-@router.patch("/income/{income_id}")
-def update_income(income_id: int, update: IncomeUpdate):
-    print("INSIDE INC")
-    for inc in incomes:
-        if inc["id"] == income_id:
-            inc[update.field] = update.value
-            return {"status": "updated", "income": inc}
-    raise HTTPException(status_code=404, detail="Income not found")
+@router.post("/income")
+def create_income(income: IncomeCreate):
+    new_id = max([i["id"] for i in incomes], default=0) + 1
+    data = income.dict()
+    data["id"] = new_id
+    incomes.append(data)
+    return {"status": "created", "income": data}

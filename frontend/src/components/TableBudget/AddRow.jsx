@@ -3,21 +3,20 @@ import { useState, memo, useCallback } from "react";
 function AddRowComponent({ type = "expense", onSave, onCancel }) {
   const [form, setForm] = useState({
     date: "",
+    business: "",
     category: "",
     amount: "",
     account: "",
     currency: "₪",
     notes: "",
-    business: "",
   });
 
   const updateField = useCallback((k, v) => {
     setForm((p) => ({ ...p, [k]: v }));
   }, []);
 
-  const save = () => {
+  const save = async () => {
     const base = {
-      id: Math.floor(Math.random() * 1e9),
       date: form.date,
       category: form.category,
       amount: parseFloat(form.amount) || 0,
@@ -25,8 +24,26 @@ function AddRowComponent({ type = "expense", onSave, onCancel }) {
       currency: form.currency || "₪",
       notes: form.notes,
     };
-    const row = type === "expense" ? { ...base, business: form.business } : base;
-    onSave?.(row);
+    const payload =
+      type === "expense" ? { ...base, business: form.business } : base;
+
+    const baseUrl = `${window.location.protocol}//${window.location.hostname}:8000`;
+    const endpoint =
+      type === "expense" ? `${baseUrl}/api/expense` : `${baseUrl}/api/income`;
+
+    try {
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json = await res.json();
+      const created = json.expense || json.income;
+      onSave?.(created);
+    } catch (err) {
+      console.error("POST failed:", err);
+    }
   };
 
   return (

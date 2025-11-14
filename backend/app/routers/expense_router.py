@@ -1,9 +1,9 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 from pydantic import BaseModel
 
 router = APIRouter()
 
-# Mock DB (temporary)
+# In-memory store (mock DB)
 expenses = [
     {
         "id": 1,
@@ -25,34 +25,28 @@ expenses = [
         "currency": "₪",
         "notes": "Bus to work",
     },
-    {
-        "id": 3,
-        "date": "2025-11-08",
-        "business": "IEC",
-        "category": "Utilities",
-        "amount": 320.30,
-        "account": "Direct debit",
-        "currency": "₪",
-        "notes": "Electricity bill",
-    },
 ]
 
+
+class ExpenseCreate(BaseModel):
+    date: str
+    business: str | None = None
+    category: str
+    amount: float
+    account: str
+    currency: str
+    notes: str | None = None
+
+
 @router.get("/expense")
-def get_expenses():
+def list_expenses():
     return expenses
 
 
-# ---- new part ----
-class ExpenseUpdate(BaseModel):
-    field: str
-    value: str | float | None = None
-
-
-@router.patch("/expense/{expense_id}")
-def update_expense(expense_id: int, update: ExpenseUpdate):
-    print("INSIDE EXP")
-    for exp in expenses:
-        if exp["id"] == expense_id:
-            exp[update.field] = update.value
-            return {"status": "updated", "expense": exp}
-    raise HTTPException(status_code=404, detail="Expense not found")
+@router.post("/expense")
+def create_expense(expense: ExpenseCreate):
+    new_id = max([e["id"] for e in expenses], default=0) + 1
+    data = expense.dict()
+    data["id"] = new_id
+    expenses.append(data)
+    return {"status": "created", "expense": data}
