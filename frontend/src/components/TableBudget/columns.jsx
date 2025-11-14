@@ -1,9 +1,6 @@
 import React from "react";
-import DeleteCell from "./DeleteCell.jsx";
 import EditableCell from "./EditableCell.jsx";
-// import DeleteCell from "./DeleteCellProxy.jsx";
-// NOTE: we proxy DeleteCell because it is defined inside TableBudget.jsx.
-// This proxy forwards props. (Tiny layer to keep React Table modular.)
+import DeleteCell from "./DeleteCell.jsx";
 
 export function getColumns(type, handleDelete) {
   const expenseFields = [
