@@ -33,6 +33,9 @@ function App() {
           showAdd={showAddExpense}
           onCloseAdd={() => setShowAddExpense(false)}
           onCreateLocal={(row) => setExpenses((prev) => [...prev, row])}
+          onLocalDelete={(id) => {
+              setExpenses((prev) => prev.filter((e) => e.id !== id));
+          }}
         />
 
         {/* Add button BELOW table */}
@@ -58,6 +61,9 @@ function App() {
           showAdd={showAddIncome}
           onCloseAdd={() => setShowAddIncome(false)}
           onCreateLocal={(row) => setIncomes((prev) => [...prev, row])}
+          onLocalDelete={(id) => {
+            setIncomes((prev) => prev.filter((i) => i.id !== id));
+          }}
         />
 
         {/* Add button BELOW table */}

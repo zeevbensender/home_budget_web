@@ -64,3 +64,13 @@ def update_expense(expense_id: int, update: ExpenseUpdate):
             save_json("expenses.json", expenses)
             return {"status": "updated", "expense": exp}
     raise HTTPException(status_code=404, detail="Expense not found")
+
+@router.delete("/expense/{expense_id}")
+def delete_expense(expense_id: int):
+    global expenses
+    for exp in expenses:
+        if exp["id"] == expense_id:
+            expenses = [e for e in expenses if e["id"] != expense_id]
+            save_json("expenses.json", expenses)
+            return {"status": "deleted", "id": expense_id}
+    raise HTTPException(status_code=404, detail="Expense not found")

@@ -33,6 +33,18 @@ export const getColumns = (type, updateCell) => {
       editable("currency", (v) => v || "₪")
     ),
     columnHelper.accessor("notes", editable("notes")),
+    {
+      header: "",
+      id: "delete",
+      cell: (info) => (
+        <DeleteCell
+          row={info.row}
+          type={type}
+          onDelete={handleDelete}
+        />
+      ),
+    },
+
   ];
 
   return base;

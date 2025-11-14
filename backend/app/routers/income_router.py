@@ -61,3 +61,15 @@ def update_income(income_id: int, update: IncomeUpdate):
             save_json("incomes.json", incomes)
             return {"status": "updated", "income": inc}
     raise HTTPException(status_code=404, detail="Income not found")
+
+from fastapi import HTTPException
+
+@router.delete("/income/{income_id}")
+def delete_income(income_id: int):
+    global incomes
+    for inc in incomes:
+        if inc["id"] == income_id:
+            incomes = [i for i in incomes if i["id"] != income_id]
+            save_json("incomes.json", incomes)
+            return {"status": "deleted", "id": income_id}
+    raise HTTPException(status_code=404, detail="Income not found")
