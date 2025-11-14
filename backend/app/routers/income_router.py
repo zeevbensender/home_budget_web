@@ -1,22 +1,75 @@
-from fastapi import APIRouter
-from typing import List
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
+from app.core.storage import load_json, save_json
 
 router = APIRouter()
 
-# Example mock data (will be replaced later)
-_mock_incomes = [
-    {"id": 1, "amount": 5000.0, "source": "Salary"},
-    {"id": 2, "amount": 250.0, "source": "Freelance"},
-]
+# Load from JSON or fallback demo data
+incomes = load_json("incomes.json", [
+    {
+        "id": 1,
+        "date": "2025-11-01",
+        "category": "Salary",
+        "amount": 8200.00,
+        "account": "Bank Leumi",
+        "currency": "₪",
+        "notes": "November salary",
+    },
+    {
+        "id": 2,
+        "date": "2025-11-10",
+        "category": "Freelance",
+        "amount": 1250.00,
+        "account": "PayPal",
+        "currency": "₪",
+        "notes": "Client project",
+    },
+])
 
-@router.get("/", tags=["Incomes"])
-def list_incomes() -> List[dict]:
-    """Temporary endpoint — returns mock income data."""
-    return _mock_incomes
+class IncomeCreate(BaseModel):
+    date: str
+    category: str
+    amount: float
+    account: str
+    currency: str
+    notes: str | None = None
 
-@router.post("/", tags=["Incomes"])
-def add_income(income: dict) -> dict:
-    """Temporary endpoint — accepts any JSON object."""
-    income["id"] = len(_mock_incomes) + 1
-    _mock_incomes.append(income)
-    return {"message": "Income added", "income": income}
+class IncomeUpdate(BaseModel):
+    field: str
+    value: str | float | None
+
+@router.get("/income")
+def list_incomes():
+    return incomes
+
+@router.post("/income")
+def create_income(income: IncomeCreate):
+    new_id = max([i["id"] for i in incomes], default=0) + 1
+    data = income.dict()
+    data["id"] = new_id
+    incomes.append(data)
+    save_json("incomes.json", incomes)
+    return {"status": "created", "income": data}
+
+@router.patch("/income/{income_id}")
+def update_income(income_id: int, update: IncomeUpdate):
+    for inc in incomes:
+        if inc["id"] == income_id:
+            if update.field not in inc:
+                raise HTTPException(status_code=400, detail="Invalid field")
+            inc[update.field] = update.value
+            save_json("incomes.json", incomes)
+            return {"status": "updated", "income": inc}
+    raise HTTPException(status_code=404, detail="Income not found")
+
+from fastapi import HTTPException
+
+@router.delete("/income/{income_id}")
+def delete_income(income_id: int):
+    global incomes
+    for inc in incomes:
+        if inc["id"] == income_id:
+            incomes = [i for i in incomes if i["id"] != income_id]
+            save_json("incomes.json", incomes)
+            return {"status": "deleted", "id": income_id}
+    raise HTTPException(status_code=404, detail="Income not found")

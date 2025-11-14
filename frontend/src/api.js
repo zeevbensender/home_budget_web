@@ -17,3 +17,19 @@ export async function getHealth() {
     return 'Error';
   }
 }
+
+export async function getExpenses() {
+  const { protocol, hostname } = window.location;
+  const port = 8000;
+  const url = `${protocol}//${hostname}:${port}/api/expense`;
+  const res = await fetch(url);
+  return res.json();
+}
+
+export async function getIncomes() {
+  const { protocol, hostname } = window.location;
+  const port = 8000;
+  const url = `${protocol}//${hostname}:${port}/api/income`;
+  const res = await fetch(url);
+  return res.json();
+}
