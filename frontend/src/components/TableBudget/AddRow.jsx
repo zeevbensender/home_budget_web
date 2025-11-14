@@ -16,10 +16,13 @@ function AddRowComponent({ type = "expense", onSave, onCancel }) {
   }, []);
 
   const save = async () => {
+    const amountNum = parseFloat(form.amount);
+    const isValid = !!form.date && !Number.isNaN(amountNum) && amountNum !== 0;
+    if (!isValid) return;  // guard on submit
     const base = {
       date: form.date,
       category: form.category,
-      amount: parseFloat(form.amount) || 0,
+      amount: amountNum || 0,
       account: form.account,
       currency: form.currency || "₪",
       notes: form.notes,
@@ -128,9 +131,13 @@ function AddRowComponent({ type = "expense", onSave, onCancel }) {
               onChange={(e) => updateField("notes", e.target.value)}
             />
           </div>
-
           <div className="col-auto">
-            <button type="submit" className="btn btn-success btn-sm me-2">
+            <button
+              type="submit"
+              className="btn btn-success btn-sm me-2"
+              disabled={!form.date || Number.isNaN(parseFloat(form.amount)) || parseFloat(form.amount) === 0}
+              title={!form.date ? "Date required" : (Number.isNaN(parseFloat(form.amount)) || parseFloat(form.amount) === 0) ? "Amount must be non-zero" : ""}
+            >
               Save
             </button>
             <button
