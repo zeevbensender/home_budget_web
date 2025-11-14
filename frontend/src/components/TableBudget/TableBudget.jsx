@@ -1,135 +1,83 @@
-import { useMemo, useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   useReactTable,
   getCoreRowModel,
   flexRender,
 } from "@tanstack/react-table";
-import usePatchBackend from "./usePatchBackend.jsx";
-import { getColumns } from "./columns.jsx";
+
 import AddRow from "./AddRow.jsx";
-
-function DeleteCell({ row, type, onDelete }) {
-  const [confirm, setConfirm] = useState(false);
-
-  if (!confirm) {
-    return (
-      <span
-        style={{ cursor: "pointer", opacity: 0.4 }}
-        onClick={() => setConfirm(true)}
-      >
-        🗑️
-      </span>
-    );
-  }
-
-  return (
-    <span className="bg-light border px-2 py-1 rounded">
-      Delete?
-      <button
-        className="btn btn-sm btn-danger ms-2"
-        onClick={() => onDelete(row.original.id)}
-      >
-        Delete
-      </button>
-      <button
-        className="btn btn-sm btn-secondary ms-1"
-        onClick={() => setConfirm(false)}
-      >
-        Cancel
-      </button>
-    </span>
-  );
-}
-
+import { getColumns } from "./columns.jsx";
+import DeleteCell from "./DeleteCell.jsx"; // Direct import – simpler & cleaner
 
 export default function TableBudget({
-  data = [],
-  type = "expense",
-  showAdd = false,
+  data,
+  type, // "expense" or "income"
+  showAdd,
   onCloseAdd,
   onCreateLocal,
+  onLocalDelete,
 }) {
-  const [rows, setRows] = useState(data);
-  const patchBackend = usePatchBackend();
+  const [tableData, setTableData] = useState(data);
 
+  // Keep table data synced when parent updates
   useEffect(() => {
-    setRows(data);
+    setTableData(data);
   }, [data]);
 
-  const updateCell = (rowIndex, field, newValue) => {
-    setRows((old) => {
-      const updated = old.map((r, i) =>
-        i === rowIndex ? { ...r, [field]: newValue } : r
-      );
-      const row = updated[rowIndex];
-      patchBackend(type, row, field, newValue);
-      return updated;
-    });
+  // -------------------------
+  // DELETE (single item)
+  // -------------------------
+  const handleDelete = async (id) => {
+    const baseUrl = `${window.location.protocol}//${window.location.hostname}:8000`;
+    const endpoint = `${baseUrl}/api/${type}/${id}`;
+
+    try {
+      const response = await fetch(endpoint, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        console.error("Delete failed:", await response.text());
+        return;
+      }
+
+      // Update table immediately
+      onLocalDelete(id);
+    } catch (err) {
+      console.error("Delete error:", err);
+    }
   };
 
-  const addNewRowLocal = (row) => {
-    setRows((old) => [...old, row]); // append at bottom
-    onCreateLocal?.(row);
-    onCloseAdd?.();
-  };
+  // -------------------------
+  // Column generation
+  // -------------------------
+  const columns = useMemo(
+    () => getColumns(type, handleDelete),
+    [type]
+  );
 
-  const columns = useMemo(() => getColumns(type, updateCell), [type]);
   const table = useReactTable({
-    data: rows,
+    data: tableData,
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
 
-    const handleDelete = async (id) => {
-      const baseUrl = `${window.location.protocol}//${window.location.hostname}:8000`;
-      const endpoint = `${baseUrl}/api/${type}/${id}`;
-
-      try {
-        const res = await fetch(endpoint, { method: "DELETE" });
-        if (!res.ok) throw new Error("Delete failed");
-
-        // Remove from table immediately
-        onLocalDelete(id);
-
-        // TODO: undo in next step
-      } catch (err) {
-        console.error("Delete error:", err);
-      }
-    };
-
-
   return (
-    <div style={{ overflowX: "auto" }}>
-      <table style={{ width: "100%", borderCollapse: "collapse" }}>
+    <div className="mb-4">
+
+      {/* TABLE */}
+      <table className="table table-sm table-hover align-middle">
         <thead>
           {table.getHeaderGroups().map((hg) => (
             <tr key={hg.id}>
               {hg.headers.map((header) => (
-                <th
-                  key={header.id}
-                  style={{
-                    textAlign: "left",
-                    borderBottom: "1px solid #ddd",
-                    padding: "8px",
-                  }}
-                >
+                <th key={header.id} className="small fw-semibold">
                   {flexRender(
                     header.column.columnDef.header,
                     header.getContext()
                   )}
                 </th>
               ))}
-              {showAdd && (
-                <th
-                  style={{
-                    textAlign: "left",
-                    borderBottom: "1px solid #ddd",
-                    padding: "8px",
-                  }}
-                >
-                  Actions
-                </th>
-              )}
             </tr>
           ))}
         </thead>
@@ -138,30 +86,28 @@ export default function TableBudget({
           {table.getRowModel().rows.map((row) => (
             <tr key={row.id}>
               {row.getVisibleCells().map((cell) => (
-                <td
-                  key={cell.id}
-                  style={{
-                    borderBottom: "1px solid #f0f0f0",
-                    padding: "8px",
-                  }}
-                >
+                <td key={cell.id}>
                   {flexRender(
                     cell.column.columnDef.cell,
                     cell.getContext()
                   )}
                 </td>
               ))}
-              {showAdd && <td style={{ padding: "8px" }} />}
             </tr>
           ))}
         </tbody>
       </table>
 
-      {/* AddRow is rendered below table to avoid losing focus */}
+      {/* ADD ROW FORM */}
       {showAdd && (
-        <div style={{ marginTop: "10px" }}>
-          <AddRow type={type} onSave={addNewRowLocal} onCancel={onCloseAdd} />
-        </div>
+        <AddRow
+          type={type}
+          onSave={async (row) => {
+            await onCreateLocal(row);
+            onCloseAdd();
+          }}
+          onCancel={onCloseAdd}
+        />
       )}
     </div>
   );

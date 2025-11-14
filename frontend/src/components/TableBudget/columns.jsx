@@ -1,38 +1,47 @@
-import { createColumnHelper } from "@tanstack/react-table";
+import React from "react";
+import DeleteCell from "./DeleteCell.jsx";
 import EditableCell from "./EditableCell.jsx";
+// import DeleteCell from "./DeleteCellProxy.jsx";
+// NOTE: we proxy DeleteCell because it is defined inside TableBudget.jsx.
+// This proxy forwards props. (Tiny layer to keep React Table modular.)
 
-const columnHelper = createColumnHelper();
+export function getColumns(type, handleDelete) {
+  const expenseFields = [
+    "date",
+    "business",
+    "category",
+    "amount",
+    "account",
+    "currency",
+    "notes",
+  ];
 
-export const getColumns = (type, updateCell) => {
-  const editable = (field, formatter) => ({
+  const incomeFields = [
+    "date",
+    "category",
+    "amount",
+    "account",
+    "currency",
+    "notes",
+  ];
+
+  const fields = type === "expense" ? expenseFields : incomeFields;
+
+  const fieldColumns = fields.map((field) => ({
+    accessorKey: field,
     header: field[0].toUpperCase() + field.slice(1),
     cell: (info) => (
       <EditableCell
         value={info.getValue()}
+        row={info.row}
         field={field}
-        rowIndex={info.row.index}
-        updateCell={updateCell}
-        formatter={formatter}
+        type={type}
       />
     ),
-  });
+  }));
 
-  const base = [
-    columnHelper.accessor("date", editable("date")),
-    ...(type === "expense"
-      ? [columnHelper.accessor("business", editable("business"))]
-      : []),
-    columnHelper.accessor("category", editable("category")),
-    columnHelper.accessor(
-      "amount",
-      editable("amount", (v) => parseFloat(v) || 0)
-    ),
-    columnHelper.accessor("account", editable("account")),
-    columnHelper.accessor(
-      "currency",
-      editable("currency", (v) => v || "₪")
-    ),
-    columnHelper.accessor("notes", editable("notes")),
+  return [
+    ...fieldColumns,
     {
       header: "",
       id: "delete",
@@ -44,8 +53,5 @@ export const getColumns = (type, updateCell) => {
         />
       ),
     },
-
   ];
-
-  return base;
-};
+}
