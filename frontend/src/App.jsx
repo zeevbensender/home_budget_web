@@ -6,6 +6,7 @@ function App() {
   const [health, setHealth] = useState("Loading...");
   const [expenses, setExpenses] = useState([]);
   const [incomes, setIncomes] = useState([]);
+
   const [showAddExpense, setShowAddExpense] = useState(false);
   const [showAddIncome, setShowAddIncome] = useState(false);
 
@@ -22,18 +23,9 @@ function App() {
         Backend health: <strong>{health}</strong>
       </p>
 
+      {/* ===== EXPENSES ===== */}
       <section className="mb-5">
-        <div className="d-flex justify-content-between align-items-center mb-2">
-          <h2 className="mb-0">Expenses</h2>
-          {!showAddExpense && (
-            <button
-              onClick={() => setShowAddExpense(true)}
-              className="btn btn-primary btn-sm"
-            >
-              + Add Expense
-            </button>
-          )}
-        </div>
+        <h2 className="mb-2">Expenses</h2>
 
         <TableBudget
           data={expenses}
@@ -42,24 +34,43 @@ function App() {
           onCloseAdd={() => setShowAddExpense(false)}
           onCreateLocal={(row) => setExpenses((prev) => [...prev, row])}
         />
+
+        {/* Add button BELOW table */}
+        {!showAddExpense && (
+          <div className="mt-2">
+            <button
+              onClick={() => setShowAddExpense(true)}
+              className="btn btn-primary btn-sm"
+            >
+              + Add Expense
+            </button>
+          </div>
+        )}
       </section>
 
+      {/* ===== INCOMES ===== */}
       <section>
         <h2 className="mb-2">Incomes</h2>
-          {!showAddIncome && (
-           <button
-             onClick={() => setShowAddIncome(true)}
-             className="btn btn-success btn-sm"
-           >
-             + Add Income
-           </button>
-         )}
-        <TableBudget data={incomes}
-            type="income"
-            showAdd={showAddIncome}
-            onCloseAdd={() => setShowAddIncome(false)}
-            onCreateLocal={(row) => setIncomes((prev) => [...prev, row])}
+
+        <TableBudget
+          data={incomes}
+          type="income"
+          showAdd={showAddIncome}
+          onCloseAdd={() => setShowAddIncome(false)}
+          onCreateLocal={(row) => setIncomes((prev) => [...prev, row])}
         />
+
+        {/* Add button BELOW table */}
+        {!showAddIncome && (
+          <div className="mt-2">
+            <button
+              onClick={() => setShowAddIncome(true)}
+              className="btn btn-success btn-sm"
+            >
+              + Add Income
+            </button>
+          </div>
+        )}
       </section>
     </div>
   );
