@@ -1,1 +1,20 @@
-[]
+[
+  {
+    "date": "2025-11-01",
+    "category": "Salary",
+    "amount": 23000.0,
+    "account": "12345",
+    "currency": "\u20aa",
+    "notes": "",
+    "id": 1
+  },
+  {
+    "date": "2025-11-01",
+    "category": "Apt Rent",
+    "amount": 3000.0,
+    "account": "54321",
+    "currency": "\u20aa",
+    "notes": "",
+    "id": 2
+  }
+]
