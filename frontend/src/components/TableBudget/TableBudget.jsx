@@ -11,26 +11,27 @@ import { getColumns } from "./columns.jsx";
 
 export default function TableBudget({
   data,
-  type,               // "expense" or "income"
+  type,                // "expense" or "income"
   showAdd,
   onCloseAdd,
   onCreateLocal,
   onLocalDelete,
+  onLocalDeleteBulk,
 }) {
   const [tableData, setTableData] = useState(data);
 
-  // --- STEP 1 + STEP 2 ---
+  // Select mode state
   const [selectMode, setSelectMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState([]);
 
-  // Sync table when parent updates
+  // Sync table data when parent updates
   useEffect(() => {
     setTableData(data);
   }, [data]);
 
-  // -------------------------
+  // ----------------------------------------------------
   // DELETE (single item)
-  // -------------------------
+  // ----------------------------------------------------
   const handleDelete = async (id) => {
     const baseUrl = `${window.location.protocol}//${window.location.hostname}:8000`;
     const endpoint = `${baseUrl}/api/${type}/${id}`;
@@ -47,26 +48,27 @@ export default function TableBudget({
     }
   };
 
-  // -------------------------
-  // Columns
-  // -------------------------
+  // ----------------------------------------------------
+  // Columns (base + checkbox column in select mode)
+  // ----------------------------------------------------
   const baseColumns = useMemo(
     () => getColumns(type, handleDelete),
     [type]
   );
 
-  // STEP 2: Add checkbox column only in select mode
   const columns = useMemo(() => {
     if (!selectMode) return baseColumns;
 
+    // Checkbox column + hide single-delete column for clarity
     return [
       {
         id: "select",
         header: (
           <input
             type="checkbox"
+            disabled={tableData.length === 0}
             checked={
-              selectedIds.length > 0 &&
+              tableData.length > 0 &&
               selectedIds.length === tableData.length
             }
             onChange={(e) => {
@@ -99,7 +101,7 @@ export default function TableBudget({
           );
         },
       },
-      ...baseColumns,
+      ...baseColumns.filter((col) => col.id !== "delete"),
     ];
   }, [selectMode, selectedIds, tableData, baseColumns]);
 
@@ -109,10 +111,46 @@ export default function TableBudget({
     getCoreRowModel: getCoreRowModel(),
   });
 
+  // ----------------------------------------------------
+  // BULK DELETE
+  // ----------------------------------------------------
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) return;
+
+    const baseUrl = `${window.location.protocol}//${window.location.hostname}:8000`;
+    const endpoint = `${baseUrl}/api/${type}/bulk-delete`;
+
+    try {
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: selectedIds }),
+      });
+
+      if (!response.ok) {
+        console.error("Bulk delete failed:", await response.text());
+        return;
+      }
+
+      // Remove rows locally
+      onLocalDeleteBulk(selectedIds);
+
+      // Exit select mode
+      setSelectedIds([]);
+      setSelectMode(false);
+
+    } catch (err) {
+      console.error("Bulk delete error:", err);
+    }
+  };
+
+  // ----------------------------------------------------
+  // UI
+  // ----------------------------------------------------
   return (
     <div className="mb-4">
 
-      {/* --- Select Mode Button --- */}
+      {/* Select Mode Toggle */}
       <div className="d-flex justify-content-end mb-2">
         {!selectMode && (
           <button
@@ -172,39 +210,34 @@ export default function TableBudget({
         </tbody>
       </table>
 
-{selectMode && (
-  <div className="d-flex align-items-center justify-content-between border rounded p-2 mb-2 bg-light">
+      {/* Bulk Delete Bar */}
+      {selectMode && (
+        <div className="d-flex align-items-center justify-content-between border rounded p-2 mb-2 bg-light">
 
-    {/* Cancel select mode (same as button above table) */}
-    <button
-      className="btn btn-outline-danger btn-sm"
-      onClick={() => {
-        setSelectMode(false);
-        setSelectedIds([]);
-      }}
-    >
-      Cancel
-    </button>
+          <button
+            className="btn btn-outline-danger btn-sm"
+            onClick={() => {
+              setSelectMode(false);
+              setSelectedIds([]);
+            }}
+          >
+            Cancel
+          </button>
 
-    {/* Show count */}
-    <div className="small text-muted">
-      {selectedIds.length} selected
-    </div>
+          <div className="small text-muted">
+            {selectedIds.length} selected
+          </div>
 
-    {/* Placeholder bulk delete button */}
-    <button
-      className="btn btn-danger btn-sm"
-      disabled={selectedIds.length === 0}
-      onClick={() => {
-        console.log("Bulk delete clicked — backend not yet wired");
-      }}
-    >
-      Delete Selected
-    </button>
+          <button
+            className="btn btn-danger btn-sm"
+            disabled={selectedIds.length === 0}
+            onClick={handleBulkDelete}
+          >
+            Delete Selected
+          </button>
 
-  </div>
-)}
-
+        </div>
+      )}
 
       {/* ADD ROW FORM */}
       {showAdd && (

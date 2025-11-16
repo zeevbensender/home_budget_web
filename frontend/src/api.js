@@ -1,35 +1,35 @@
-// Dynamically build the backend base URL based on current location
-const getBaseUrl = () => {
-  const { protocol, hostname } = window.location;
-  const port = 8000; // backend always listens on 8000 inside compose
-  return `${protocol}//${hostname}:${port}`;
-};
+const BASE_URL = `${window.location.protocol}//${window.location.hostname}:8000/api`;
 
-export async function getHealth() {
-  const url = `${getBaseUrl()}/api/health`;
-
-  try {
-    const response = await fetch(url);
-    if (!response.ok) throw new Error(`Request failed: ${response.status}`);
-    return await response.text();
-  } catch (error) {
-    console.error('Health check failed:', error);
-    return 'Error';
-  }
-}
-
+// ------------------------
+// EXPENSES
+// ------------------------
 export async function getExpenses() {
-  const { protocol, hostname } = window.location;
-  const port = 8000;
-  const url = `${protocol}//${hostname}:${port}/api/expense`;
-  const res = await fetch(url);
+  const res = await fetch(`${BASE_URL}/expense`);
   return res.json();
 }
 
+export async function createExpense(data) {
+  const res = await fetch(`${BASE_URL}/expense`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+}
+
+// ------------------------
+// INCOME
+// ------------------------
 export async function getIncomes() {
-  const { protocol, hostname } = window.location;
-  const port = 8000;
-  const url = `${protocol}//${hostname}:${port}/api/income`;
-  const res = await fetch(url);
+  const res = await fetch(`${BASE_URL}/income`);
+  return res.json();
+}
+
+export async function createIncome(data) {
+  const res = await fetch(`${BASE_URL}/income`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
   return res.json();
 }

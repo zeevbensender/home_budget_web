@@ -1,85 +1,104 @@
-import { useEffect, useState } from "react";
-import { getHealth, getExpenses, getIncomes } from "./api.js";
+import React, { useEffect, useState } from "react";
 import TableBudget from "./components/TableBudget/TableBudget.jsx";
+import { getExpenses, getIncomes, createExpense, createIncome } from "./api.js";
+import "bootstrap/dist/css/bootstrap.min.css";
 
-function App() {
-  const [health, setHealth] = useState("Loading...");
+export default function App() {
   const [expenses, setExpenses] = useState([]);
   const [incomes, setIncomes] = useState([]);
 
   const [showAddExpense, setShowAddExpense] = useState(false);
   const [showAddIncome, setShowAddIncome] = useState(false);
 
+  // ---------------------------
+  // LOAD DATA
+  // ---------------------------
   useEffect(() => {
-    getHealth().then(setHealth);
-    getExpenses().then(setExpenses);
-    getIncomes().then(setIncomes);
+    loadData();
   }, []);
 
+  async function loadData() {
+    const [e, i] = await Promise.all([getExpenses(), getIncomes()]);
+    setExpenses(e);
+    setIncomes(i);
+  }
+
+  // ---------------------------
+  // LOCAL DELETE HANDLERS
+  // ---------------------------
+  const deleteLocalExpense = (id) =>
+    setExpenses((prev) => prev.filter((e) => e.id !== id));
+
+  const deleteLocalIncome = (id) =>
+    setIncomes((prev) => prev.filter((i) => i.id !== id));
+
+  const deleteLocalExpenseBulk = (ids) =>
+    setExpenses((prev) => prev.filter((e) => !ids.includes(e.id)));
+
+  const deleteLocalIncomeBulk = (ids) =>
+    setIncomes((prev) => prev.filter((i) => !ids.includes(i.id)));
+
+  // ---------------------------
+  // CREATE HANDLERS
+  // ---------------------------
+  const addExpenseLocal = async (row) => {
+    await createExpense(row);
+    const fresh = await getExpenses();
+    setExpenses(fresh);
+  };
+
+  const addIncomeLocal = async (row) => {
+    await createIncome(row);
+    const fresh = await getIncomes();
+    setIncomes(fresh);
+  };
+
+  // ---------------------------
+  // UI
+  // ---------------------------
   return (
     <div className="container py-4">
-      <h1 className="mb-3">HBW</h1>
-      <p>
-        Backend health: <strong>{health}</strong>
-      </p>
 
-      {/* ===== EXPENSES ===== */}
-      <section className="mb-5">
-        <h2 className="mb-2">Expenses</h2>
+      <h3>Expenses</h3>
 
-        <TableBudget
-          data={expenses}
-          type="expense"
-          showAdd={showAddExpense}
-          onCloseAdd={() => setShowAddExpense(false)}
-          onCreateLocal={(row) => setExpenses((prev) => [...prev, row])}
-          onLocalDelete={(id) => {
-              setExpenses((prev) => prev.filter((e) => e.id !== id));
-          }}
-        />
+      <button
+        className="btn btn-primary btn-sm mb-2"
+        onClick={() => setShowAddExpense(true)}
+      >
+        Add Expense
+      </button>
 
-        {/* Add button BELOW table */}
-        {!showAddExpense && (
-          <div className="mt-2">
-            <button
-              onClick={() => setShowAddExpense(true)}
-              className="btn btn-primary btn-sm"
-            >
-              + Add Expense
-            </button>
-          </div>
-        )}
-      </section>
+      <TableBudget
+        data={expenses}
+        type="expense"
+        showAdd={showAddExpense}
+        onCloseAdd={() => setShowAddExpense(false)}
+        onCreateLocal={addExpenseLocal}
+        onLocalDelete={deleteLocalExpense}
+        onLocalDeleteBulk={deleteLocalExpenseBulk}
+      />
 
-      {/* ===== INCOMES ===== */}
-      <section>
-        <h2 className="mb-2">Incomes</h2>
+      <hr />
 
-        <TableBudget
-          data={incomes}
-          type="income"
-          showAdd={showAddIncome}
-          onCloseAdd={() => setShowAddIncome(false)}
-          onCreateLocal={(row) => setIncomes((prev) => [...prev, row])}
-          onLocalDelete={(id) => {
-            setIncomes((prev) => prev.filter((i) => i.id !== id));
-          }}
-        />
+      <h3>Income</h3>
 
-        {/* Add button BELOW table */}
-        {!showAddIncome && (
-          <div className="mt-2">
-            <button
-              onClick={() => setShowAddIncome(true)}
-              className="btn btn-success btn-sm"
-            >
-              + Add Income
-            </button>
-          </div>
-        )}
-      </section>
+      <button
+        className="btn btn-primary btn-sm mb-2"
+        onClick={() => setShowAddIncome(true)}
+      >
+        Add Income
+      </button>
+
+      <TableBudget
+        data={incomes}
+        type="income"
+        showAdd={showAddIncome}
+        onCloseAdd={() => setShowAddIncome(false)}
+        onCreateLocal={addIncomeLocal}
+        onLocalDelete={deleteLocalIncome}
+        onLocalDeleteBulk={deleteLocalIncomeBulk}
+      />
+
     </div>
   );
 }
-
-export default App;

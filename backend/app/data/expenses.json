@@ -1,25 +1,5 @@
 [
   {
-    "date": "2025-11-02",
-    "business": "ampm",
-    "category": "Food",
-    "amount": 100.0,
-    "account": "12345",
-    "currency": "\u20aa",
-    "notes": "",
-    "id": 1
-  },
-  {
-    "date": "2025-11-10",
-    "business": "H&M",
-    "category": "Clothing",
-    "amount": 400.0,
-    "account": "54321",
-    "currency": "\u20aa",
-    "notes": "",
-    "id": 2
-  },
-  {
     "date": "2025-11-03",
     "business": "Golda",
     "category": "Dinning out",
