@@ -19,11 +19,11 @@ export default function TableBudget({
 }) {
   const [tableData, setTableData] = useState(data);
 
-  // --- Step 1 states ---
+  // --- STEP 1 + STEP 2 ---
   const [selectMode, setSelectMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState([]);
 
-  // Sync table with parent
+  // Sync table when parent updates
   useEffect(() => {
     setTableData(data);
   }, [data]);
@@ -50,10 +50,58 @@ export default function TableBudget({
   // -------------------------
   // Columns
   // -------------------------
-  const columns = useMemo(
+  const baseColumns = useMemo(
     () => getColumns(type, handleDelete),
     [type]
   );
+
+  // STEP 2: Add checkbox column only in select mode
+  const columns = useMemo(() => {
+    if (!selectMode) return baseColumns;
+
+    return [
+      {
+        id: "select",
+        header: (
+          <input
+            type="checkbox"
+            checked={
+              selectedIds.length > 0 &&
+              selectedIds.length === tableData.length
+            }
+            onChange={(e) => {
+              if (e.target.checked) {
+                setSelectedIds(tableData.map((row) => row.id));
+              } else {
+                setSelectedIds([]);
+              }
+            }}
+          />
+        ),
+        cell: (info) => {
+          const rowId = info.row.original.id;
+          const checked = selectedIds.includes(rowId);
+
+          return (
+            <input
+              type="checkbox"
+              checked={checked}
+              onChange={(e) => {
+                if (e.target.checked) {
+                  setSelectedIds((prev) => [...prev, rowId]);
+                } else {
+                  setSelectedIds((prev) =>
+                    prev.filter((id) => id !== rowId)
+                  );
+                }
+              }}
+            />
+          );
+        },
+      },
+      ...baseColumns,
+    ];
+  }, [selectMode, selectedIds, tableData, baseColumns]);
 
   const table = useReactTable({
     data: tableData,
@@ -61,20 +109,17 @@ export default function TableBudget({
     getCoreRowModel: getCoreRowModel(),
   });
 
-  // -------------------------
-  // UI
-  // -------------------------
   return (
     <div className="mb-4">
 
-      {/* --- Step 1: Select Mode Button --- */}
+      {/* --- Select Mode Button --- */}
       <div className="d-flex justify-content-end mb-2">
         {!selectMode && (
           <button
             className="btn btn-outline-secondary btn-sm"
             onClick={() => {
               setSelectMode(true);
-              setSelectedIds([]); // reset selections
+              setSelectedIds([]);
             }}
           >
             Select
