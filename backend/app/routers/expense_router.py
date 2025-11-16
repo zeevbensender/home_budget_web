@@ -80,14 +80,13 @@ class BulkDeleteRequest(BaseModel):
     ids: list[int]
 
 @router.post("/expense/bulk-delete")
-def bulk_delete_income(req: BulkDeleteRequest):
+def bulk_delete_expense(req: BulkDeleteRequest):
     global expenses
     before = len(expenses)
 
-    incomes = [i for i in expenses if i["id"] not in req.ids]
+    expenses = [e for e in expenses if e["id"] not in req.ids]
 
     deleted_count = before - len(expenses)
 
-    save_json("expenses.json", incomes)
+    save_json("expenses.json", expenses)
     return {"status": "deleted", "count": deleted_count}
-
