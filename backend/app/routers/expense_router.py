@@ -74,3 +74,20 @@ def delete_expense(expense_id: int):
             save_json("expenses.json", expenses)
             return {"status": "deleted", "id": expense_id}
     raise HTTPException(status_code=404, detail="Expense not found")
+
+
+class BulkDeleteRequest(BaseModel):
+    ids: list[int]
+
+@router.post("/expense/bulk-delete")
+def bulk_delete_income(req: BulkDeleteRequest):
+    global expenses
+    before = len(expenses)
+
+    incomes = [i for i in expenses if i["id"] not in req.ids]
+
+    deleted_count = before - len(expenses)
+
+    save_json("expenses.json", incomes)
+    return {"status": "deleted", "count": deleted_count}
+
