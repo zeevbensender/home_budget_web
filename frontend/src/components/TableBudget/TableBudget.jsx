@@ -6,12 +6,12 @@ import {
 } from "@tanstack/react-table";
 
 import AddRow from "./AddRow.jsx";
+import DeleteCell from "./DeleteCell.jsx";
 import { getColumns } from "./columns.jsx";
-import DeleteCell from "./DeleteCell.jsx"; // Direct import – simpler & cleaner
 
 export default function TableBudget({
   data,
-  type, // "expense" or "income"
+  type,               // "expense" or "income"
   showAdd,
   onCloseAdd,
   onCreateLocal,
@@ -19,7 +19,11 @@ export default function TableBudget({
 }) {
   const [tableData, setTableData] = useState(data);
 
-  // Keep table data synced when parent updates
+  // --- Step 1 states ---
+  const [selectMode, setSelectMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState([]);
+
+  // Sync table with parent
   useEffect(() => {
     setTableData(data);
   }, [data]);
@@ -32,16 +36,11 @@ export default function TableBudget({
     const endpoint = `${baseUrl}/api/${type}/${id}`;
 
     try {
-      const response = await fetch(endpoint, {
-        method: "DELETE",
-      });
-
+      const response = await fetch(endpoint, { method: "DELETE" });
       if (!response.ok) {
         console.error("Delete failed:", await response.text());
         return;
       }
-
-      // Update table immediately
       onLocalDelete(id);
     } catch (err) {
       console.error("Delete error:", err);
@@ -49,7 +48,7 @@ export default function TableBudget({
   };
 
   // -------------------------
-  // Column generation
+  // Columns
   // -------------------------
   const columns = useMemo(
     () => getColumns(type, handleDelete),
@@ -62,8 +61,38 @@ export default function TableBudget({
     getCoreRowModel: getCoreRowModel(),
   });
 
+  // -------------------------
+  // UI
+  // -------------------------
   return (
     <div className="mb-4">
+
+      {/* --- Step 1: Select Mode Button --- */}
+      <div className="d-flex justify-content-end mb-2">
+        {!selectMode && (
+          <button
+            className="btn btn-outline-secondary btn-sm"
+            onClick={() => {
+              setSelectMode(true);
+              setSelectedIds([]); // reset selections
+            }}
+          >
+            Select
+          </button>
+        )}
+
+        {selectMode && (
+          <button
+            className="btn btn-outline-danger btn-sm"
+            onClick={() => {
+              setSelectMode(false);
+              setSelectedIds([]);
+            }}
+          >
+            Cancel
+          </button>
+        )}
+      </div>
 
       {/* TABLE */}
       <table className="table table-sm table-hover align-middle">

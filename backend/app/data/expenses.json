@@ -8,5 +8,15 @@
     "currency": "\u20aa",
     "notes": "",
     "id": 1
+  },
+  {
+    "date": "2025-11-12",
+    "business": "Second",
+    "category": "books",
+    "amount": 75.0,
+    "account": "cash",
+    "currency": "\u20aa",
+    "notes": "",
+    "id": 2
   }
 ]
