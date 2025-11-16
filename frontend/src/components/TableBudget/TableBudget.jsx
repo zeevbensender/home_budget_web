@@ -172,6 +172,40 @@ export default function TableBudget({
         </tbody>
       </table>
 
+{selectMode && (
+  <div className="d-flex align-items-center justify-content-between border rounded p-2 mb-2 bg-light">
+
+    {/* Cancel select mode (same as button above table) */}
+    <button
+      className="btn btn-outline-danger btn-sm"
+      onClick={() => {
+        setSelectMode(false);
+        setSelectedIds([]);
+      }}
+    >
+      Cancel
+    </button>
+
+    {/* Show count */}
+    <div className="small text-muted">
+      {selectedIds.length} selected
+    </div>
+
+    {/* Placeholder bulk delete button */}
+    <button
+      className="btn btn-danger btn-sm"
+      disabled={selectedIds.length === 0}
+      onClick={() => {
+        console.log("Bulk delete clicked — backend not yet wired");
+      }}
+    >
+      Delete Selected
+    </button>
+
+  </div>
+)}
+
+
       {/* ADD ROW FORM */}
       {showAdd && (
         <AddRow
