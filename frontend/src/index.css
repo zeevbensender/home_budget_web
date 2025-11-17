@@ -67,18 +67,13 @@ button:focus-visible {
   }
 }
 
-/* Prevent horizontal overflow on mobile */
+/* Prevent horizontal overflow */
 .table-responsive {
   overflow-x: auto;
 }
 
-.mobile-scroll {
-  width: 100%;
-  overflow-x: auto;
-}
-
 /* -----------------------------------------
-   MOBILE FIXES FOR TABLE OVERFLOW
+   MOBILE RESPONSIVE FIXES
    ----------------------------------------- */
 @media (max-width: 768px) {
   body {
@@ -89,23 +84,33 @@ button:focus-visible {
     font-size: 18px;
   }
 
-  /* Fix: allow wrapping to avoid overflow */
-  table td,
-  table th {
-    font-size: 13px;
-    white-space: normal !important;  /* <--- FIX */
-    word-break: break-word;          /* <--- FIX */
-    padding: 6px 4px;                /* tighter spacing */
+  /* Smaller headers */
+  table.table th {
+    font-size: 11px !important;
+  }
+
+  /* Ellipsis instead of wrapping */
+  table.table th,
+  table.table td {
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    max-width: 80px;
+    padding: 6px 4px !important;
+  }
+
+  /* Hide notes column on mobile */
+  th.notes-column,
+  td.notes-column,
+  .notes-column {
+    display: none !important;
   }
 
   button.btn {
     font-size: 14px;
     padding: 6px 10px;
   }
-}
 
-/* Container spacing */
-@media (max-width: 768px) {
   .container {
     padding-left: 8px !important;
     padding-right: 8px !important;
