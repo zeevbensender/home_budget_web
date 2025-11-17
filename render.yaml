@@ -1,4 +1,7 @@
 services:
+  # ============================
+  # Backend Service (FastAPI)
+  # ============================
   - type: web
     name: hbw-backend
     env: docker
@@ -10,14 +13,25 @@ services:
       - key: PORT
         value: 8000
 
+  # ============================
+  # Frontend Service (React + Vite + Nginx)
+  # ============================
   - type: web
     name: hbw-frontend
     env: docker
     dockerfilePath: frontend/Dockerfile
     autoDeploy: true
     envVars:
-      - key: VITE_API_BASE_URL
+      # Backend HOST provided by Render (safe, supported)
+      - key: VITE_API_BASE_URL_HOST
         fromService:
           type: web
           name: hbw-backend
-          property: url
+          property: host
+
+      # Backend internal port (but NOT externally used — required syntactically)
+      - key: VITE_API_BASE_URL_PORT
+        fromService:
+          type: web
+          name: hbw-backend
+          property: port
