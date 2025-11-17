@@ -1,23 +1,23 @@
 services:
   - type: web
-    name: home-budget-backend
-    env: python
-    plan: free
-    buildCommand: |
-      pip install poetry
-      cd backend
-      poetry install --no-root
-    startCommand: |
-      cd backend
-      poetry run uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    name: hbw-backend
+    env: docker
+    dockerfilePath: backend/Dockerfile
+    autoDeploy: true
     envVars:
-      - key: PYTHON_VERSION
-        value: 3.11.9
-      - key: DATABASE_URL
-        fromDatabase:
-          name: home-budget-db
-          property: connectionString
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      - key: PORT
+        value: 8000
 
-databases:
-  - name: home-budget-db
-    plan: free
+  - type: web
+    name: hbw-frontend
+    env: docker
+    dockerfilePath: frontend/Dockerfile
+    autoDeploy: true
+    envVars:
+      - key: VITE_API_BASE_URL
+        fromService:
+          type: web
+          name: hbw-backend
+          property: url
