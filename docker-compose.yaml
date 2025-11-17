@@ -41,11 +41,17 @@ services:
       --port 8000
       --reload
   frontend:
-      build: ./frontend
-      ports:
-        - "5080:80"
-      depends_on:
-        - backend
+    container_name: home_budget_frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "5080:5080"
+    depends_on:
+      - backend
 volumes:
   postgres_data:
 
