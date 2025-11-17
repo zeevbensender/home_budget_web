@@ -66,3 +66,46 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+/* Prevent horizontal overflow on mobile */
+.table-responsive {
+  overflow-x: auto;
+}
+
+.mobile-scroll {
+  width: 100%;
+  overflow-x: auto;
+}
+
+
+
+
+
+
+@media (max-width: 768px) {
+  body {
+    font-size: 14px;
+  }
+
+  h3 {
+    font-size: 18px;
+  }
+
+  table td, table th {
+    font-size: 13px;
+    white-space: nowrap; /* compact columns */
+  }
+
+  button.btn {
+    font-size: 14px;
+    padding: 6px 10px;
+  }
+}
+
+
+@media (max-width: 768px) {
+  .container {
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+  }
+}
+

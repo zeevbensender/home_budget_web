@@ -77,7 +77,7 @@ export default function App() {
         >
           Add Expense
         </button>
-
+        <div className="mobile-scroll">
         <TableBudget
           data={expenses}
           type="expense"
@@ -87,7 +87,7 @@ export default function App() {
           onLocalDelete={deleteLocalExpense}
           onLocalDeleteBulk={deleteLocalExpenseBulk}
         />
-
+        </div>
         <hr />
 
         <h3>Income</h3>
@@ -98,7 +98,7 @@ export default function App() {
         >
           Add Income
         </button>
-
+        <div className="mobile-scroll">
         <TableBudget
           data={incomes}
           type="income"
@@ -108,7 +108,7 @@ export default function App() {
           onLocalDelete={deleteLocalIncome}
           onLocalDeleteBulk={deleteLocalIncomeBulk}
         />
-
+        </div>
       </div>
 
       {isMobile && (
