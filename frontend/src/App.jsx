@@ -17,14 +17,43 @@ export default function App() {
   const isMobile = useIsMobile();
 
   // ---------------------------
-  // MOBILE MODAL (Step 1.2)
+  // MOBILE MODAL (Step 1.2 + 1.3)
   // ---------------------------
   const [mobileModalOpen, setMobileModalOpen] = useState(false);
   const [mobileInitialData, setMobileInitialData] = useState(null);
 
+  // ---------------------------
+  // TOAST (Step 1.3)
+  // ---------------------------
+  const [toast, setToast] = useState(null);
+
   function handleMobileAddClick() {
     setMobileInitialData(null);
     setMobileModalOpen(true);
+  }
+
+  async function handleMobileAddSubmit(formData) {
+    try {
+      if (formData.type === "expense") {
+        await createExpense(formData);
+        const fresh = await getExpenses();
+        setExpenses(fresh);
+      } else {
+        await createIncome(formData);
+        const fresh = await getIncomes();
+        setIncomes(fresh);
+      }
+
+      setToast("Transaction added");
+      setTimeout(() => setToast(null), 2500);
+
+    } catch (err) {
+      console.error("Mobile add error:", err);
+      setToast("Error adding transaction");
+      setTimeout(() => setToast(null), 3500);
+    }
+
+    setMobileModalOpen(false);
   }
 
   // ---------------------------
@@ -136,11 +165,15 @@ export default function App() {
         mode={mobileInitialData ? "edit" : "add"}
         initialData={mobileInitialData}
         onClose={() => setMobileModalOpen(false)}
-        onSubmit={(data) => {
-          console.log("Mobile modal submitted:", data);
-          setMobileModalOpen(false);
-        }}
+        onSubmit={handleMobileAddSubmit}
       />
+
+      {/* TOAST */}
+      {toast && (
+        <div className="mobile-toast">
+          {toast}
+        </div>
+      )}
     </>
   );
 }
