@@ -8,7 +8,7 @@ export default function TransactionModal({
   onClose,
   onSubmit,
 }) {
-  const [formData, setFormData] = useState({
+  const emptyState = {
     type: "expense",
     date: "",
     business: "",
@@ -16,11 +16,15 @@ export default function TransactionModal({
     amount: "",
     account: "",
     notes: "",
-  });
+  };
 
-  // Prefill on edit
+  const [formData, setFormData] = useState(emptyState);
+
+  // Reset or prefill every time modal opens
   useEffect(() => {
-    if (initialData) {
+    if (!isOpen) return;
+
+    if (mode === "edit" && initialData) {
       setFormData({
         type: initialData.type || "expense",
         date: initialData.date || "",
@@ -29,9 +33,12 @@ export default function TransactionModal({
         amount: initialData.amount || "",
         account: initialData.account || "",
         notes: initialData.notes || "",
+        id: initialData.id,   // keep id for PUT
       });
+    } else {
+      setFormData(emptyState); // fresh form
     }
-  }, [initialData]);
+  }, [isOpen, initialData, mode]);
 
   if (!isOpen) return null;
 
