@@ -2,8 +2,10 @@ import React, { useEffect, useState } from "react";
 import TableBudget from "./components/TableBudget/TableBudget.jsx";
 import { getExpenses, getIncomes, createExpense, createIncome } from "./api.js";
 import "bootstrap/dist/css/bootstrap.min.css";
+
 import AddFloatingButton from "./components/TableBudget/AddFloatingButton.jsx";
 import useIsMobile from "./hooks/useIsMobile.js";
+import TransactionModal from "./components/TransactionModal.jsx";
 
 export default function App() {
   const [expenses, setExpenses] = useState([]);
@@ -13,7 +15,17 @@ export default function App() {
   const [showAddIncome, setShowAddIncome] = useState(false);
 
   const isMobile = useIsMobile();
-  console.log("isMobile:", isMobile);
+
+  // ---------------------------
+  // MOBILE MODAL (Step 1.2)
+  // ---------------------------
+  const [mobileModalOpen, setMobileModalOpen] = useState(false);
+  const [mobileInitialData, setMobileInitialData] = useState(null);
+
+  function handleMobileAddClick() {
+    setMobileInitialData(null);
+    setMobileModalOpen(true);
+  }
 
   // ---------------------------
   // LOAD DATA
@@ -58,10 +70,6 @@ export default function App() {
     setIncomes(fresh);
   };
 
-  function handleMobileAddClick() {
-    console.log("Add transaction (mobile) clicked");
-  }
-
   // ---------------------------
   // UI
   // ---------------------------
@@ -78,15 +86,17 @@ export default function App() {
           Add Expense
         </button>
 
-        <TableBudget
-          data={expenses}
-          type="expense"
-          showAdd={showAddExpense}
-          onCloseAdd={() => setShowAddExpense(false)}
-          onCreateLocal={addExpenseLocal}
-          onLocalDelete={deleteLocalExpense}
-          onLocalDeleteBulk={deleteLocalExpenseBulk}
-        />
+        <div className="mobile-scroll">
+          <TableBudget
+            data={expenses}
+            type="expense"
+            showAdd={showAddExpense}
+            onCloseAdd={() => setShowAddExpense(false)}
+            onCreateLocal={addExpenseLocal}
+            onLocalDelete={deleteLocalExpense}
+            onLocalDeleteBulk={deleteLocalExpenseBulk}
+          />
+        </div>
 
         <hr />
 
@@ -99,24 +109,38 @@ export default function App() {
           Add Income
         </button>
 
-        <TableBudget
-          data={incomes}
-          type="income"
-          showAdd={showAddIncome}
-          onCloseAdd={() => setShowAddIncome(false)}
-          onCreateLocal={addIncomeLocal}
-          onLocalDelete={deleteLocalIncome}
-          onLocalDeleteBulk={deleteLocalIncomeBulk}
-        />
-
+        <div className="mobile-scroll">
+          <TableBudget
+            data={incomes}
+            type="income"
+            showAdd={showAddIncome}
+            onCloseAdd={() => setShowAddIncome(false)}
+            onCreateLocal={addIncomeLocal}
+            onLocalDelete={deleteLocalIncome}
+            onLocalDeleteBulk={deleteLocalIncomeBulk}
+          />
+        </div>
       </div>
 
+      {/* MOBILE FLOATING ACTION BUTTON */}
       {isMobile && (
         <AddFloatingButton
           onClick={handleMobileAddClick}
           title="Add"
         />
       )}
+
+      {/* MOBILE ADD/EDIT TRANSACTION MODAL */}
+      <TransactionModal
+        isOpen={mobileModalOpen}
+        mode={mobileInitialData ? "edit" : "add"}
+        initialData={mobileInitialData}
+        onClose={() => setMobileModalOpen(false)}
+        onSubmit={(data) => {
+          console.log("Mobile modal submitted:", data);
+          setMobileModalOpen(false);
+        }}
+      />
     </>
   );
 }
