@@ -1,35 +1,20 @@
 services:
-  # ============================
-  # Backend Service (FastAPI)
-  # ============================
   - type: web
     name: hbw-backend
     env: docker
     dockerfilePath: backend/Dockerfile
     autoDeploy: true
-    envVars:
-      - key: PYTHONUNBUFFERED
-        value: "1"
 
-  # ============================
-  # Frontend Service (React + Vite + Nginx)
-  # ============================
   - type: web
     name: hbw-frontend
     env: docker
     dockerfilePath: frontend/Dockerfile
-    autoDeploy: true
+    buildCommand: ""
     envVars:
-      # Backend HOST provided by Render (safe, supported)
-      - key: VITE_API_BASE_URL_HOST
+      - key: VITE_API_BASE_URL
         fromService:
           type: web
           name: hbw-backend
-          property: host
-
-      # Backend internal port (but NOT externally used — required syntactically)
-      - key: VITE_API_BASE_URL_PORT
-        fromService:
-          type: web
-          name: hbw-backend
-          property: port
+          property: hostport
+    build:
+      context: ./frontend
