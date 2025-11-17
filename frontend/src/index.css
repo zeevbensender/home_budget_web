@@ -24,10 +24,10 @@ a:hover {
 
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
+  padding: 0;
   min-width: 320px;
-  min-height: 100vh;
+  background-color: #ffffff;
+  color: #213547;
 }
 
 h1 {
@@ -65,4 +65,75 @@ button:focus-visible {
   button {
     background-color: #f9f9f9;
   }
+}
+
+/* Prevent horizontal overflow */
+.table-responsive {
+  overflow-x: auto;
+}
+
+/* -----------------------------------------
+   MOBILE RESPONSIVE FIXES
+   ----------------------------------------- */
+@media (max-width: 768px) {
+  body {
+    font-size: 14px;
+  }
+
+  h3 {
+    font-size: 18px;
+  }
+
+  /* Smaller headers */
+  table.table th {
+    font-size: 11px !important;
+  }
+
+  /* Ellipsis instead of wrapping */
+  table.table th,
+  table.table td {
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    max-width: 80px;
+    padding: 6px 4px !important;
+  }
+
+  /* Hide notes column on mobile */
+  th.notes-column,
+  td.notes-column,
+  .notes-column {
+    display: none !important;
+  }
+
+  button.btn {
+    font-size: 14px;
+    padding: 6px 10px;
+  }
+
+  .container {
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+  }
+}
+.mobile-toast {
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #0d6efd;
+  color: white;
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-size: 14px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  z-index: 99999;
+  animation: fadeInOut 2.5s ease;
+}
+
+@keyframes fadeInOut {
+  0%   { opacity: 0; transform: translate(-50%, 10px); }
+  10%  { opacity: 1; transform: translate(-50%, 0); }
+  90%  { opacity: 1; }
+  100% { opacity: 0; transform: translate(-50%, 10px); }
 }

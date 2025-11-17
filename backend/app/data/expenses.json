@@ -1,12 +1,52 @@
 [
   {
-    "date": "2025-11-14",
+    "date": "2025-11-02",
     "business": "ampm",
-    "category": "food",
-    "amount": 150.0,
-    "account": "0802",
+    "category": "Food",
+    "amount": 100.0,
+    "account": "12345",
     "currency": "\u20aa",
     "notes": "",
     "id": 1
+  },
+  {
+    "date": "2025-11-10",
+    "business": "H&M",
+    "category": "Clothing",
+    "amount": 400.0,
+    "account": "54321",
+    "currency": "\u20aa",
+    "notes": "",
+    "id": 2
+  },
+  {
+    "date": "2025-11-03",
+    "business": "Golda",
+    "category": "Dinning out",
+    "amount": 32.0,
+    "account": "Cash",
+    "currency": "\u20aa",
+    "notes": "",
+    "id": 3
+  },
+  {
+    "date": "2025-11-24",
+    "business": "ampm",
+    "category": "food",
+    "amount": 12.0,
+    "account": "cash",
+    "currency": "\u20aa",
+    "notes": "",
+    "id": 4
+  },
+  {
+    "date": "2025-11-17",
+    "business": "Keshet Teamim",
+    "category": "Food",
+    "amount": 158.16,
+    "account": "1683",
+    "currency": "\u20aa",
+    "notes": "",
+    "id": 5
   }
 ]

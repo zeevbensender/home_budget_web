@@ -1,0 +1,28 @@
+.fab-btn {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  background: #2563eb; /* Blue-600 */
+  color: white;
+  border: none;
+  outline: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  cursor: pointer;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.2);
+  z-index: 9999;
+}
+
+.fab-btn:hover {
+  background: #1d4ed8; /* Blue-700 */
+}
+
+.fab-btn i {
+  font-size: 28px;
+  line-height: 1;
+}

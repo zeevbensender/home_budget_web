@@ -1,85 +1,220 @@
-import { useEffect, useState } from "react";
-import { getHealth, getExpenses, getIncomes } from "./api.js";
+import React, { useEffect, useState } from "react";
 import TableBudget from "./components/TableBudget/TableBudget.jsx";
+import { getExpenses, getIncomes, createExpense, createIncome, updateExpense, updateIncome } from "./api.js";
+import "bootstrap/dist/css/bootstrap.min.css";
 
-function App() {
-  const [health, setHealth] = useState("Loading...");
+import AddFloatingButton from "./components/TableBudget/AddFloatingButton.jsx";
+import useIsMobile from "./hooks/useIsMobile.js";
+import TransactionModal from "./components/TransactionModal.jsx";
+
+export default function App() {
   const [expenses, setExpenses] = useState([]);
   const [incomes, setIncomes] = useState([]);
 
   const [showAddExpense, setShowAddExpense] = useState(false);
   const [showAddIncome, setShowAddIncome] = useState(false);
 
+  const isMobile = useIsMobile();
+
+  // ---------------------------
+  // MOBILE MODAL STATE
+  // ---------------------------
+  const [mobileModalOpen, setMobileModalOpen] = useState(false);
+  const [mobileInitialData, setMobileInitialData] = useState(null);
+
+  // ---------------------------
+  // TOAST
+  // ---------------------------
+  const [toast, setToast] = useState(null);
+
+  // ---------------------------
+  // MOBILE ADD FLOW
+  // ---------------------------
+  function handleMobileAddClick() {
+    setMobileInitialData(null);
+    setMobileModalOpen(true);
+  }
+
+  async function handleMobileAddSubmit(formData) {
+    try {
+      if (formData.type === "expense") {
+        await createExpense(formData);
+        const fresh = await getExpenses();
+        setExpenses(fresh);
+      } else {
+        await createIncome(formData);
+        const fresh = await getIncomes();
+        setIncomes(fresh);
+      }
+
+      setToast("Transaction added");
+      setTimeout(() => setToast(null), 2500);
+
+    } catch (err) {
+      console.error("Mobile add error:", err);
+      setToast("Error adding transaction");
+      setTimeout(() => setToast(null), 3500);
+    }
+
+    setMobileModalOpen(false);
+  }
+
+  // ---------------------------
+  // MOBILE EDIT FLOW
+  // ---------------------------
+  function handleMobileEdit(rowData) {
+    setMobileInitialData(rowData);
+    setMobileModalOpen(true);
+  }
+
+  async function handleMobileEditSubmit(formData) {
+    try {
+      if (formData.type === "expense") {
+        await updateExpense(formData.id, formData);
+        const fresh = await getExpenses();
+        setExpenses(fresh);
+      } else {
+        await updateIncome(formData.id, formData);
+        const fresh = await getIncomes();
+        setIncomes(fresh);
+      }
+
+      setToast("Transaction updated");
+      setTimeout(() => setToast(null), 2500);
+
+    } catch (err) {
+      console.error("Mobile edit error:", err);
+      setToast("Error updating");
+      setTimeout(() => setToast(null), 3500);
+    }
+
+    setMobileModalOpen(false);
+  }
+
+  // ---------------------------
+  // LOAD DATA
+  // ---------------------------
   useEffect(() => {
-    getHealth().then(setHealth);
-    getExpenses().then(setExpenses);
-    getIncomes().then(setIncomes);
+    loadData();
   }, []);
 
+  async function loadData() {
+    const [e, i] = await Promise.all([getExpenses(), getIncomes()]);
+    setExpenses(e);
+    setIncomes(i);
+  }
+
+  // ---------------------------
+  // LOCAL DELETE HANDLERS
+  // ---------------------------
+  const deleteLocalExpense = (id) =>
+    setExpenses((prev) => prev.filter((e) => e.id !== id));
+
+  const deleteLocalIncome = (id) =>
+    setIncomes((prev) => prev.filter((i) => i.id !== id));
+
+  const deleteLocalExpenseBulk = (ids) =>
+    setExpenses((prev) => prev.filter((e) => !ids.includes(e.id)));
+
+  const deleteLocalIncomeBulk = (ids) =>
+    setIncomes((prev) => prev.filter((i) => !ids.includes(i.id)));
+
+  // ---------------------------
+  // CREATE HANDLERS (DESKTOP)
+  // ---------------------------
+  const addExpenseLocal = async (row) => {
+    await createExpense(row);
+    const fresh = await getExpenses();
+    setExpenses(fresh);
+  };
+
+  const addIncomeLocal = async (row) => {
+    await createIncome(row);
+    const fresh = await getIncomes();
+    setIncomes(fresh);
+  };
+
+  // ---------------------------
+  // UI
+  // ---------------------------
   return (
-    <div className="container py-4">
-      <h1 className="mb-3">HBW</h1>
-      <p>
-        Backend health: <strong>{health}</strong>
-      </p>
+    <>
+      <div className="container py-4">
 
-      {/* ===== EXPENSES ===== */}
-      <section className="mb-5">
-        <h2 className="mb-2">Expenses</h2>
+        <h3>Expenses</h3>
 
-        <TableBudget
-          data={expenses}
-          type="expense"
-          showAdd={showAddExpense}
-          onCloseAdd={() => setShowAddExpense(false)}
-          onCreateLocal={(row) => setExpenses((prev) => [...prev, row])}
-          onLocalDelete={(id) => {
-              setExpenses((prev) => prev.filter((e) => e.id !== id));
-          }}
-        />
-
-        {/* Add button BELOW table */}
-        {!showAddExpense && (
-          <div className="mt-2">
+        {!isMobile && (
             <button
+              className="btn btn-primary btn-sm mb-2"
               onClick={() => setShowAddExpense(true)}
-              className="btn btn-primary btn-sm"
             >
-              + Add Expense
+              Add Expense
             </button>
-          </div>
         )}
-      </section>
+        <div className="mobile-scroll">
+          <TableBudget
+            data={expenses}
+            type="expense"
+            showAdd={showAddExpense}
+            onCloseAdd={() => setShowAddExpense(false)}
+            onCreateLocal={addExpenseLocal}
+            onLocalDelete={deleteLocalExpense}
+            onLocalDeleteBulk={deleteLocalExpenseBulk}
+            onMobileEdit={handleMobileEdit}
+          />
+        </div>
 
-      {/* ===== INCOMES ===== */}
-      <section>
-        <h2 className="mb-2">Incomes</h2>
+        <hr />
 
-        <TableBudget
-          data={incomes}
-          type="income"
-          showAdd={showAddIncome}
-          onCloseAdd={() => setShowAddIncome(false)}
-          onCreateLocal={(row) => setIncomes((prev) => [...prev, row])}
-          onLocalDelete={(id) => {
-            setIncomes((prev) => prev.filter((i) => i.id !== id));
-          }}
-        />
+        <h3>Income</h3>
 
-        {/* Add button BELOW table */}
-        {!showAddIncome && (
-          <div className="mt-2">
+
+        {!isMobile && (
             <button
+              className="btn btn-primary btn-sm mb-2"
               onClick={() => setShowAddIncome(true)}
-              className="btn btn-success btn-sm"
             >
-              + Add Income
+              Add Income
             </button>
-          </div>
         )}
-      </section>
-    </div>
+
+        <div className="mobile-scroll">
+          <TableBudget
+            data={incomes}
+            type="income"
+            showAdd={showAddIncome}
+            onCloseAdd={() => setShowAddIncome(false)}
+            onCreateLocal={addIncomeLocal}
+            onLocalDelete={deleteLocalIncome}
+            onLocalDeleteBulk={deleteLocalIncomeBulk}
+            onMobileEdit={handleMobileEdit}
+          />
+        </div>
+      </div>
+
+      {/* MOBILE FLOATING ACTION BUTTON */}
+      {isMobile && (
+        <AddFloatingButton
+          onClick={handleMobileAddClick}
+          title="Add"
+        />
+      )}
+
+      {/* MOBILE MODAL */}
+      <TransactionModal
+        isOpen={mobileModalOpen}
+        mode={mobileInitialData ? "edit" : "add"}
+        initialData={mobileInitialData}
+        onClose={() => setMobileModalOpen(false)}
+        onSubmit={mobileInitialData ? handleMobileEditSubmit : handleMobileAddSubmit}
+      />
+
+      {/* TOAST */}
+      {toast && (
+        <div className="mobile-toast">
+          {toast}
+        </div>
+      )}
+    </>
   );
 }
-
-export default App;

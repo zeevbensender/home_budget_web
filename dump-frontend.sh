@@ -1,0 +1,1 @@
+git ls-files | grep "frontend/src" | grep -v react.svg | xargs -d $'\n' bash -c 'for arg do echo "**************** $arg **********************"; cat $arg; echo "EOF"; done'
