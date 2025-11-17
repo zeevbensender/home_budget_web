@@ -16,5 +16,14 @@
     "currency": "\u20aa",
     "notes": "",
     "id": 2
+  },
+  {
+    "date": "2025-11-17",
+    "category": "coding",
+    "amount": 10000.0,
+    "account": "cash",
+    "currency": "\u20aa",
+    "notes": "",
+    "id": 3
   }
 ]

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import TableBudget from "./components/TableBudget/TableBudget.jsx";
-import { getExpenses, getIncomes, createExpense, createIncome } from "./api.js";
+import { getExpenses, getIncomes, createExpense, createIncome, updateExpense, updateIncome } from "./api.js";
 import "bootstrap/dist/css/bootstrap.min.css";
 
 import AddFloatingButton from "./components/TableBudget/AddFloatingButton.jsx";
@@ -17,16 +17,19 @@ export default function App() {
   const isMobile = useIsMobile();
 
   // ---------------------------
-  // MOBILE MODAL (Step 1.2 + 1.3)
+  // MOBILE MODAL STATE
   // ---------------------------
   const [mobileModalOpen, setMobileModalOpen] = useState(false);
   const [mobileInitialData, setMobileInitialData] = useState(null);
 
   // ---------------------------
-  // TOAST (Step 1.3)
+  // TOAST
   // ---------------------------
   const [toast, setToast] = useState(null);
 
+  // ---------------------------
+  // MOBILE ADD FLOW
+  // ---------------------------
   function handleMobileAddClick() {
     setMobileInitialData(null);
     setMobileModalOpen(true);
@@ -50,6 +53,38 @@ export default function App() {
     } catch (err) {
       console.error("Mobile add error:", err);
       setToast("Error adding transaction");
+      setTimeout(() => setToast(null), 3500);
+    }
+
+    setMobileModalOpen(false);
+  }
+
+  // ---------------------------
+  // MOBILE EDIT FLOW
+  // ---------------------------
+  function handleMobileEdit(rowData) {
+    setMobileInitialData(rowData);
+    setMobileModalOpen(true);
+  }
+
+  async function handleMobileEditSubmit(formData) {
+    try {
+      if (formData.type === "expense") {
+        await updateExpense(formData.id, formData);
+        const fresh = await getExpenses();
+        setExpenses(fresh);
+      } else {
+        await updateIncome(formData.id, formData);
+        const fresh = await getIncomes();
+        setIncomes(fresh);
+      }
+
+      setToast("Transaction updated");
+      setTimeout(() => setToast(null), 2500);
+
+    } catch (err) {
+      console.error("Mobile edit error:", err);
+      setToast("Error updating");
       setTimeout(() => setToast(null), 3500);
     }
 
@@ -85,7 +120,7 @@ export default function App() {
     setIncomes((prev) => prev.filter((i) => !ids.includes(i.id)));
 
   // ---------------------------
-  // CREATE HANDLERS
+  // CREATE HANDLERS (DESKTOP)
   // ---------------------------
   const addExpenseLocal = async (row) => {
     await createExpense(row);
@@ -124,6 +159,7 @@ export default function App() {
             onCreateLocal={addExpenseLocal}
             onLocalDelete={deleteLocalExpense}
             onLocalDeleteBulk={deleteLocalExpenseBulk}
+            onMobileEdit={handleMobileEdit}
           />
         </div>
 
@@ -147,6 +183,7 @@ export default function App() {
             onCreateLocal={addIncomeLocal}
             onLocalDelete={deleteLocalIncome}
             onLocalDeleteBulk={deleteLocalIncomeBulk}
+            onMobileEdit={handleMobileEdit}
           />
         </div>
       </div>
@@ -159,13 +196,13 @@ export default function App() {
         />
       )}
 
-      {/* MOBILE ADD/EDIT TRANSACTION MODAL */}
+      {/* MOBILE MODAL */}
       <TransactionModal
         isOpen={mobileModalOpen}
         mode={mobileInitialData ? "edit" : "add"}
         initialData={mobileInitialData}
         onClose={() => setMobileModalOpen(false)}
-        onSubmit={handleMobileAddSubmit}
+        onSubmit={mobileInitialData ? handleMobileEditSubmit : handleMobileAddSubmit}
       />
 
       {/* TOAST */}

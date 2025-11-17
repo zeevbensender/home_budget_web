@@ -1,6 +1,8 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
+from typing import Optional
 from app.core.storage import load_json, save_json
+from app.core.settings import get_default_currency
 
 router = APIRouter()
 
@@ -31,8 +33,8 @@ class IncomeCreate(BaseModel):
     category: str
     amount: float
     account: str
-    currency: str
-    notes: str | None = None
+    currency: Optional[str] = None   # <-- changed
+    notes: Optional[str] = None
 
 class IncomeUpdate(BaseModel):
     field: str
@@ -46,6 +48,11 @@ def list_incomes():
 def create_income(income: IncomeCreate):
     new_id = max([i["id"] for i in incomes], default=0) + 1
     data = income.dict()
+
+    # Auto-fill currency if missing
+    if not data.get("currency"):
+        data["currency"] = get_default_currency()
+
     data["id"] = new_id
     incomes.append(data)
     save_json("incomes.json", incomes)
@@ -57,12 +64,15 @@ def update_income(income_id: int, update: IncomeUpdate):
         if inc["id"] == income_id:
             if update.field not in inc:
                 raise HTTPException(status_code=400, detail="Invalid field")
-            inc[update.field] = update.value
+
+            if update.field == "currency" and update.value is None:
+                inc["currency"] = get_default_currency()
+            else:
+                inc[update.field] = update.value
+
             save_json("incomes.json", incomes)
             return {"status": "updated", "income": inc}
     raise HTTPException(status_code=404, detail="Income not found")
-
-from fastapi import HTTPException
 
 @router.delete("/income/{income_id}")
 def delete_income(income_id: int):

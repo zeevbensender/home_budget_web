@@ -17,6 +17,7 @@ export default function TableBudget({
   onCreateLocal,
   onLocalDelete,
   onLocalDeleteBulk,
+  onMobileEdit,         // <-- NEW
 }) {
   const [tableData, setTableData] = useState(data);
 
@@ -49,7 +50,7 @@ export default function TableBudget({
   };
 
   // ----------------------------------------------------
-  // Columns (base + checkbox column in select mode)
+  // Columns
   // ----------------------------------------------------
   const baseColumns = useMemo(
     () => getColumns(type, handleDelete),
@@ -59,7 +60,6 @@ export default function TableBudget({
   const columns = useMemo(() => {
     if (!selectMode) return baseColumns;
 
-    // Checkbox column + hide single-delete column for clarity
     return [
       {
         id: "select",
@@ -132,10 +132,7 @@ export default function TableBudget({
         return;
       }
 
-      // Remove rows locally
       onLocalDeleteBulk(selectedIds);
-
-      // Exit select mode
       setSelectedIds([]);
       setSelectMode(false);
 
@@ -150,7 +147,6 @@ export default function TableBudget({
   return (
     <div className="mb-4">
 
-      {/* Select Mode Toggle */}
       <div className="d-flex justify-content-end mb-2">
         {!selectMode && (
           <button
@@ -177,7 +173,6 @@ export default function TableBudget({
         )}
       </div>
 
-      {/* TABLE — wrapped for mobile responsiveness */}
       <div className="table-responsive">
         <table className="table table-sm table-hover align-middle">
           <thead>
@@ -197,7 +192,14 @@ export default function TableBudget({
 
           <tbody>
             {table.getRowModel().rows.map((row) => (
-              <tr key={row.id}>
+              <tr
+                key={row.id}
+                onClick={() => {
+                  if (window.innerWidth < 768 && !selectMode) {
+                    onMobileEdit?.(row.original);
+                  }
+                }}
+              >
                 {row.getVisibleCells().map((cell) => (
                   <td key={cell.id}>
                     {flexRender(
@@ -212,7 +214,6 @@ export default function TableBudget({
         </table>
       </div>
 
-      {/* Bulk Delete Bar */}
       {selectMode && (
         <div className="d-flex align-items-center justify-content-between border rounded p-2 mb-2 bg-light">
 
@@ -241,7 +242,6 @@ export default function TableBudget({
         </div>
       )}
 
-      {/* ADD ROW FORM */}
       {showAdd && (
         <AddRow
           type={type}

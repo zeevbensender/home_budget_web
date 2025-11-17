@@ -1,6 +1,8 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
+from typing import Optional
 from app.core.storage import load_json, save_json
+from app.core.settings import get_default_currency
 
 router = APIRouter()
 
@@ -30,12 +32,12 @@ expenses = load_json("expenses.json", [
 
 class ExpenseCreate(BaseModel):
     date: str
-    business: str | None = None
+    business: Optional[str] = None
     category: str
     amount: float
     account: str
-    currency: str
-    notes: str | None = None
+    currency: Optional[str] = None  # <-- changed
+    notes: Optional[str] = None
 
 class ExpenseUpdate(BaseModel):
     field: str
@@ -49,6 +51,11 @@ def list_expenses():
 def create_expense(expense: ExpenseCreate):
     new_id = max([e["id"] for e in expenses], default=0) + 1
     data = expense.dict()
+
+    # Auto-fill currency if missing
+    if not data.get("currency"):
+        data["currency"] = get_default_currency()
+
     data["id"] = new_id
     expenses.append(data)
     save_json("expenses.json", expenses)
@@ -60,9 +67,16 @@ def update_expense(expense_id: int, update: ExpenseUpdate):
         if exp["id"] == expense_id:
             if update.field not in exp:
                 raise HTTPException(status_code=400, detail="Invalid field")
-            exp[update.field] = update.value
+
+            # Allow updating to null (keep old), but fallback if needed
+            if update.field == "currency" and update.value is None:
+                exp["currency"] = get_default_currency()
+            else:
+                exp[update.field] = update.value
+
             save_json("expenses.json", expenses)
             return {"status": "updated", "expense": exp}
+
     raise HTTPException(status_code=404, detail="Expense not found")
 
 @router.delete("/expense/{expense_id}")
@@ -74,7 +88,6 @@ def delete_expense(expense_id: int):
             save_json("expenses.json", expenses)
             return {"status": "deleted", "id": expense_id}
     raise HTTPException(status_code=404, detail="Expense not found")
-
 
 class BulkDeleteRequest(BaseModel):
     ids: list[int]

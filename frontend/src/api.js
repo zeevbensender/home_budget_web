@@ -17,6 +17,15 @@ export async function createExpense(data) {
   return res.json();
 }
 
+export async function updateExpense(id, data) {
+  const res = await fetch(`${BASE_URL}/expense/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+}
+
 // ------------------------
 // INCOME
 // ------------------------
@@ -28,6 +37,15 @@ export async function getIncomes() {
 export async function createIncome(data) {
   const res = await fetch(`${BASE_URL}/income`, {
     method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+}
+
+export async function updateIncome(id, data) {
+  const res = await fetch(`${BASE_URL}/income/${id}`, {
+    method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
   });
