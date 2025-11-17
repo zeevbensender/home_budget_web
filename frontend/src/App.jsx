@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import TableBudget from "./components/TableBudget/TableBudget.jsx";
 import { getExpenses, getIncomes, createExpense, createIncome } from "./api.js";
 import "bootstrap/dist/css/bootstrap.min.css";
+import AddFloatingButton from "./components/TableBudget/AddFloatingButton.jsx";
+import useIsMobile from "./hooks/useIsMobile.js";
 
 export default function App() {
   const [expenses, setExpenses] = useState([]);
@@ -9,6 +11,9 @@ export default function App() {
 
   const [showAddExpense, setShowAddExpense] = useState(false);
   const [showAddIncome, setShowAddIncome] = useState(false);
+
+  const isMobile = useIsMobile();
+  console.log("isMobile:", isMobile);
 
   // ---------------------------
   // LOAD DATA
@@ -53,52 +58,65 @@ export default function App() {
     setIncomes(fresh);
   };
 
+  function handleMobileAddClick() {
+    console.log("Add transaction (mobile) clicked");
+  }
+
   // ---------------------------
   // UI
   // ---------------------------
   return (
-    <div className="container py-4">
+    <>
+      <div className="container py-4">
 
-      <h3>Expenses</h3>
+        <h3>Expenses</h3>
 
-      <button
-        className="btn btn-primary btn-sm mb-2"
-        onClick={() => setShowAddExpense(true)}
-      >
-        Add Expense
-      </button>
+        <button
+          className="btn btn-primary btn-sm mb-2"
+          onClick={() => setShowAddExpense(true)}
+        >
+          Add Expense
+        </button>
 
-      <TableBudget
-        data={expenses}
-        type="expense"
-        showAdd={showAddExpense}
-        onCloseAdd={() => setShowAddExpense(false)}
-        onCreateLocal={addExpenseLocal}
-        onLocalDelete={deleteLocalExpense}
-        onLocalDeleteBulk={deleteLocalExpenseBulk}
-      />
+        <TableBudget
+          data={expenses}
+          type="expense"
+          showAdd={showAddExpense}
+          onCloseAdd={() => setShowAddExpense(false)}
+          onCreateLocal={addExpenseLocal}
+          onLocalDelete={deleteLocalExpense}
+          onLocalDeleteBulk={deleteLocalExpenseBulk}
+        />
 
-      <hr />
+        <hr />
 
-      <h3>Income</h3>
+        <h3>Income</h3>
 
-      <button
-        className="btn btn-primary btn-sm mb-2"
-        onClick={() => setShowAddIncome(true)}
-      >
-        Add Income
-      </button>
+        <button
+          className="btn btn-primary btn-sm mb-2"
+          onClick={() => setShowAddIncome(true)}
+        >
+          Add Income
+        </button>
 
-      <TableBudget
-        data={incomes}
-        type="income"
-        showAdd={showAddIncome}
-        onCloseAdd={() => setShowAddIncome(false)}
-        onCreateLocal={addIncomeLocal}
-        onLocalDelete={deleteLocalIncome}
-        onLocalDeleteBulk={deleteLocalIncomeBulk}
-      />
+        <TableBudget
+          data={incomes}
+          type="income"
+          showAdd={showAddIncome}
+          onCloseAdd={() => setShowAddIncome(false)}
+          onCreateLocal={addIncomeLocal}
+          onLocalDelete={deleteLocalIncome}
+          onLocalDeleteBulk={deleteLocalIncomeBulk}
+        />
 
-    </div>
+      </div>
+
+      {isMobile && (
+        <AddFloatingButton
+          onClick={handleMobileAddClick}
+          title="Add"
+        />
+      )}
+    </>
   );
 }
