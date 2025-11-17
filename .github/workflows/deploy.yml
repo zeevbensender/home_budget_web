@@ -51,7 +51,7 @@ jobs:
       # 5️⃣.1️⃣  Build Frontend (minimal check)
       # ----------------------------
       - name: Build frontend (minimal check)
-        run: docker build -t homebudget-frontend ./frontend
+        run: docker build -t homebudget-frontend -f ./frontend/Dockerfile .
 
       # ----------------------------
       # 6️⃣  Export requirements.txt
