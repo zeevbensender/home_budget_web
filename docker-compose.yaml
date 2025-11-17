@@ -43,13 +43,10 @@ services:
   frontend:
     container_name: home_budget_frontend
     build:
-      context: ./frontend
-      dockerfile: Dockerfile.dev
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
+      context: .
+      dockerfile: ./frontend/Dockerfile
     ports:
-      - "5080:5080"
+      - "5080:80"
     depends_on:
       - backend
 volumes:
