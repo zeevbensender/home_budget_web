@@ -20,8 +20,8 @@ services:
   # ----------------------------------
   backend:
     build:
-      context: ./backend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./backend/Dockerfile
     container_name: home_budget_backend
     restart: always
     depends_on:
