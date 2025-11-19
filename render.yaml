@@ -4,17 +4,36 @@ services:
     env: docker
     dockerfilePath: backend/Dockerfile
     autoDeploy: true
+    envVars:
+      # For logging behavior; not required but useful.
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      # Render uses this to know which internal port your app exposes.
+      # Our uvicorn command in backend/Dockerfile listens on 8000.
+      - key: PORT
+        value: "8000"
+      # DATABASE_URL, SECRET_KEY, etc. should be added here or via the UI
+      # but are not included now to keep this generic.
 
+  # ============================
+  # Frontend: React (Vite) + Nginx
+  # ============================
   - type: web
     name: hbw-frontend
     env: docker
     dockerfilePath: frontend/Dockerfile
-    buildCommand: ""
+    autoDeploy: true
     envVars:
+      # Base URL for API calls in the frontend.
+      # This is the ONLY place where the backend URL appears.
+      #
+      # IMPORTANT: this assumes Render will host the backend service as:
+      #   https://hbw-backend.onrender.com
+      #
+      # and that your frontend code uses:
+      #   import.meta.env.VITE_API_BASE_URL
+      # as the base for /expense, /income, etc.
+      #
+      # If you later migrate to another provider, you only change this value.
       - key: VITE_API_BASE_URL
-        fromService:
-          type: web
-          name: hbw-backend
-          property: hostport
-    build:
-      context: ./frontend
+        value: "https://hbw-backend.onrender.com/api"

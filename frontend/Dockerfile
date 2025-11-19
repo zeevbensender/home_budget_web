@@ -1,12 +1,15 @@
-# Step 1: Build the static site
+
 FROM node:20-alpine AS build
+
 WORKDIR /app
 COPY ./frontend/package*.json ./
 RUN npm install
-COPY ./frontend .
+COPY ./frontend ./
+
+# Build static assets
 RUN npm run build
 
-# Step 2: Serve the built files with a lightweight web server
+# --- Runtime image ---
 FROM nginx:alpine
 COPY --from=build /app/dist /usr/share/nginx/html
 EXPOSE 80
