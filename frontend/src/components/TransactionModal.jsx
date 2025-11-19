@@ -6,7 +6,7 @@ import {
   createIncome,
   updateExpense,
   updateIncome,
-} from "../../api.js";
+} from "../api.js";
 
 export default function TransactionModal({
   isOpen,
