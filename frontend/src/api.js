@@ -6,7 +6,8 @@
 
 const BASE_URL =
   import.meta.env.VITE_API_BASE_URL ||
-  `http://${window.location.hostname}:8000/api`;
+  'https://hbw-backend.onrender.com/api';
+//  `http://${window.location.hostname}:8000/api`;
 
 console.log("API Base URL:", BASE_URL);
 
