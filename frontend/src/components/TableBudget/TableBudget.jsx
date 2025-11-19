@@ -9,6 +9,13 @@ import AddRow from "./AddRow.jsx";
 import DeleteCell from "./DeleteCell.jsx";
 import { getColumns } from "./columns.jsx";
 
+import {
+  deleteExpense,
+  deleteIncome,
+  bulkDeleteExpenses,
+  bulkDeleteIncomes,
+} from "../../api.js";
+
 export default function TableBudget({
   data,
   type,                // "expense" or "income"
@@ -17,31 +24,26 @@ export default function TableBudget({
   onCreateLocal,
   onLocalDelete,
   onLocalDeleteBulk,
-  onMobileEdit,         // <-- NEW
+  onMobileEdit,
 }) {
   const [tableData, setTableData] = useState(data);
 
-  // Select mode state
   const [selectMode, setSelectMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState([]);
 
-  // Sync table data when parent updates
   useEffect(() => {
     setTableData(data);
   }, [data]);
 
   // ----------------------------------------------------
-  // DELETE (single item)
+  // DELETE (single)
   // ----------------------------------------------------
   const handleDelete = async (id) => {
-    const baseUrl = `${window.location.protocol}//${window.location.hostname}:8000`;
-    const endpoint = `${baseUrl}/api/${type}/${id}`;
-
     try {
-      const response = await fetch(endpoint, { method: "DELETE" });
-      if (!response.ok) {
-        console.error("Delete failed:", await response.text());
-        return;
+      if (type === "expense") {
+        await deleteExpense(id);
+      } else {
+        await deleteIncome(id);
       }
       onLocalDelete(id);
     } catch (err) {
@@ -83,18 +85,15 @@ export default function TableBudget({
         cell: (info) => {
           const rowId = info.row.original.id;
           const checked = selectedIds.includes(rowId);
-
           return (
             <input
               type="checkbox"
               checked={checked}
               onChange={(e) => {
                 if (e.target.checked) {
-                  setSelectedIds((prev) => [...prev, rowId]);
+                  setSelectedIds((p) => [...p, rowId]);
                 } else {
-                  setSelectedIds((prev) =>
-                    prev.filter((id) => id !== rowId)
-                  );
+                  setSelectedIds((p) => p.filter((id) => id !== rowId));
                 }
               }}
             />
@@ -117,25 +116,16 @@ export default function TableBudget({
   const handleBulkDelete = async () => {
     if (selectedIds.length === 0) return;
 
-    const baseUrl = `${window.location.protocol}//${window.location.hostname}:8000`;
-    const endpoint = `${baseUrl}/api/${type}/bulk-delete`;
-
     try {
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ids: selectedIds }),
-      });
-
-      if (!response.ok) {
-        console.error("Bulk delete failed:", await response.text());
-        return;
+      if (type === "expense") {
+        await bulkDeleteExpenses(selectedIds);
+      } else {
+        await bulkDeleteIncomes(selectedIds);
       }
 
       onLocalDeleteBulk(selectedIds);
-      setSelectedIds([]);
       setSelectMode(false);
-
+      setSelectedIds([]);
     } catch (err) {
       console.error("Bulk delete error:", err);
     }

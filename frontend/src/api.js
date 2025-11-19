@@ -1,86 +1,56 @@
 // FRONTEND/src/api.js
 
-// Values injected by Render if deployed:
-const host = import.meta.env.VITE_API_BASE_URL_HOST;
-const port = import.meta.env.VITE_API_BASE_URL_PORT;
+// ----------------------------------------------
+// Determine API base URL
+// ----------------------------------------------
 
-// -----------------------------
-// URL building logic
-// -----------------------------
-
-let BASE_URL;
-
-// Render hosting (VITE_API_BASE_URL_HOST will be defined)
-if (host) {
-  // Render exposes HTTPS on port 443 — no need to append :port
-  BASE_URL = `https://${host}/api`;
-} else {
-  // Local development (docker-compose OR local vite)
-  const localHost = window.location.hostname;
-  BASE_URL = `http://${localHost}:8000/api`;
-}
+const BASE_URL =
+  import.meta.env.VITE_API_BASE_URL ||
+  `http://${window.location.hostname}:8000/api`;
 
 console.log("API Base URL:", BASE_URL);
 
-// -----------------------------
-// API calls
-// -----------------------------
-
-export async function getExpenses() {
-  const r = await fetch(`${BASE_URL}/expense`);
-  return r.json();
+// Helper for JSON requests
+async function request(url, options = {}) {
+  const res = await fetch(url, options);
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`HTTP ${res.status}: ${text}`);
+  }
+  return res.json().catch(() => null);
 }
 
-export async function getIncomes() {
-  const r = await fetch(`${BASE_URL}/income`);
-  return r.json();
+// ----------------------------------------------
+// EXPENSES
+// ----------------------------------------------
+
+export function getExpenses() {
+  return request(`${BASE_URL}/expense`);
 }
 
-export async function createExpense(data) {
-  const r = await fetch(`${BASE_URL}/expense`, {
+export function createExpense(data) {
+  return request(`${BASE_URL}/expense`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
   });
-  return r.json();
 }
 
-export async function createIncome(data) {
-  const r = await fetch(`${BASE_URL}/income`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
-  return r.json();
-}
-
-export async function updateExpense(id, data) {
-  const r = await fetch(`${BASE_URL}/expense/${id}`, {
+export function updateExpense(id, data) {
+  return request(`${BASE_URL}/expense/${id}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
   });
-  return r.json();
 }
 
-export async function updateIncome(id, data) {
-  const r = await fetch(`${BASE_URL}/income/${id}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
+export function deleteExpense(id) {
+  return fetch(`${BASE_URL}/expense/${id}`, {
+    method: "DELETE",
   });
-  return r.json();
 }
 
-export async function deleteExpense(id) {
-  return fetch(`${BASE_URL}/expense/${id}`, { method: "DELETE" });
-}
-
-export async function deleteIncome(id) {
-  return fetch(`${BASE_URL}/income/${id}`, { method: "DELETE" });
-}
-
-export async function bulkDeleteExpenses(ids) {
+export function bulkDeleteExpenses(ids) {
   return fetch(`${BASE_URL}/expense/bulk-delete`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -88,7 +58,37 @@ export async function bulkDeleteExpenses(ids) {
   });
 }
 
-export async function bulkDeleteIncomes(ids) {
+// ----------------------------------------------
+// INCOME
+// ----------------------------------------------
+
+export function getIncomes() {
+  return request(`${BASE_URL}/income`);
+}
+
+export function createIncome(data) {
+  return request(`${BASE_URL}/income`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+}
+
+export function updateIncome(id, data) {
+  return request(`${BASE_URL}/income/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+}
+
+export function deleteIncome(id) {
+  return fetch(`${BASE_URL}/income/${id}`, {
+    method: "DELETE",
+  });
+}
+
+export function bulkDeleteIncomes(ids) {
   return fetch(`${BASE_URL}/income/bulk-delete`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },

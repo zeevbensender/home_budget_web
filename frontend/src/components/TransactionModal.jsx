@@ -1,12 +1,19 @@
 import React, { useState, useEffect } from "react";
 import "./transactionModal.css";
 
+import {
+  createExpense,
+  createIncome,
+  updateExpense,
+  updateIncome,
+} from "../../api.js";
+
 export default function TransactionModal({
   isOpen,
-  mode = "add",                // "add" | "edit"
-  initialData = null,          // for edit
+  mode = "add",             // "add" | "edit"
+  initialData = null,
   onClose,
-  onSubmit,
+  onSubmit,                 // parent handles local state refresh
 }) {
   const emptyState = {
     type: "expense",
@@ -20,7 +27,7 @@ export default function TransactionModal({
 
   const [formData, setFormData] = useState(emptyState);
 
-  // Reset or prefill every time modal opens
+  // Prefill data when editing
   useEffect(() => {
     if (!isOpen) return;
 
@@ -33,29 +40,66 @@ export default function TransactionModal({
         amount: initialData.amount || "",
         account: initialData.account || "",
         notes: initialData.notes || "",
-        id: initialData.id,   // keep id for PUT
+        id: initialData.id,
       });
     } else {
-      setFormData(emptyState); // fresh form
+      setFormData(emptyState);
     }
-  }, [isOpen, initialData, mode]);
+  }, [isOpen, mode, initialData]);
 
   if (!isOpen) return null;
 
   const handleChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((p) => ({ ...p, [field]: value }));
   };
 
-  const handleSave = () => {
-     onSubmit(formData);
+  const handleSave = async () => {
+    const amountNum = parseFloat(formData.amount);
+
+    if (!formData.date || Number.isNaN(amountNum)) {
+      alert("Date and amount are required");
+      return;
+    }
+
+    const payload = {
+      date: formData.date,
+      category: formData.category,
+      amount: amountNum,
+      account: formData.account,
+      notes: formData.notes,
+    };
+
+    try {
+      let result;
+
+      if (formData.type === "expense") {
+        payload.business = formData.business || "";
+
+        if (mode === "add") {
+          result = await createExpense(payload);
+        } else {
+          result = await updateExpense(formData.id, payload);
+        }
+      } else {
+        if (mode === "add") {
+          result = await createIncome(payload);
+        } else {
+          result = await updateIncome(formData.id, payload);
+        }
+      }
+
+      onSubmit?.(result);
+      onClose();
+
+    } catch (err) {
+      console.error("Save error:", err);
+      alert("Failed to save transaction.");
+    }
   };
 
   return (
     <div className="tm-overlay" onClick={onClose}>
-      <div
-        className="tm-sheet"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div className="tm-sheet" onClick={(e) => e.stopPropagation()}>
         <div className="tm-handle" />
 
         <h4 className="tm-title">
@@ -67,7 +111,8 @@ export default function TransactionModal({
           <label>Type</label>
           <select
             value={formData.type}
-            onChange={e => handleChange("type", e.target.value)}
+            onChange={(e) => handleChange("type", e.target.value)}
+            disabled={mode === "edit"}   // prevent switching type on edit
           >
             <option value="expense">Expense</option>
             <option value="income">Income</option>
@@ -80,18 +125,18 @@ export default function TransactionModal({
           <input
             type="date"
             value={formData.date}
-            onChange={e => handleChange("date", e.target.value)}
+            onChange={(e) => handleChange("date", e.target.value)}
           />
         </div>
 
-        {/* BUSINESS only for EXPENSE */}
+        {/* BUSINESS (expense only) */}
         {formData.type === "expense" && (
           <div className="tm-field">
             <label>Business</label>
             <input
               type="text"
               value={formData.business}
-              onChange={e => handleChange("business", e.target.value)}
+              onChange={(e) => handleChange("business", e.target.value)}
             />
           </div>
         )}
@@ -102,7 +147,7 @@ export default function TransactionModal({
           <input
             type="text"
             value={formData.category}
-            onChange={e => handleChange("category", e.target.value)}
+            onChange={(e) => handleChange("category", e.target.value)}
           />
         </div>
 
@@ -113,7 +158,7 @@ export default function TransactionModal({
             type="number"
             step="0.01"
             value={formData.amount}
-            onChange={e => handleChange("amount", e.target.value)}
+            onChange={(e) => handleChange("amount", e.target.value)}
           />
         </div>
 
@@ -123,7 +168,7 @@ export default function TransactionModal({
           <input
             type="text"
             value={formData.account}
-            onChange={e => handleChange("account", e.target.value)}
+            onChange={(e) => handleChange("account", e.target.value)}
           />
         </div>
 
@@ -133,7 +178,7 @@ export default function TransactionModal({
           <textarea
             rows="2"
             value={formData.notes}
-            onChange={e => handleChange("notes", e.target.value)}
+            onChange={(e) => handleChange("notes", e.target.value)}
           />
         </div>
 
