@@ -5,9 +5,10 @@
 // ----------------------------------------------
 const apiUrl = process.env.VITE_REACT_APP_API_URL;
 const BASE_URL =
-  process.env.VITE_REACT_APP_API_URL ||
-  'https://hbw-backend.onrender.com/api';
-//  `https://${window.location.hostname}/api`;
+  import.meta.env.VITE_REACT_APP_API_URL ||
+  `https://${window.location.hostname}/api`;
+//  'https://hbw-backend.onrender.com/api';
+
 
 
 console.log("==> API Base URL:", BASE_URL);
