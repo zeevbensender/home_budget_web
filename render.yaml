@@ -23,6 +23,6 @@ services:
     env: docker
     dockerfilePath: frontend/Dockerfile
     autoDeploy: true
-    envVars:
-      - key: REACT_APP_API_URL
-        value: "https://hbw-backend.onrender.com/api"
+#    envVars:
+#      - key: REACT_APP_API_URL
+#        value: "https://hbw-backend.onrender.com/api"
