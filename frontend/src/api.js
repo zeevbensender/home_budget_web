@@ -6,8 +6,8 @@
 const apiUrl = process.env.REACT_APP_API_URL;
 const BASE_URL =
   process.env.REACT_APP_API_URL ||
-  `https://${window.location.hostname}/api`;
-//  'https://hbw-backend.onrender.com/api';
+  'https://hbw-backend.onrender.com/api';
+//  `https://${window.location.hostname}/api`;
 
 
 console.log("==> API Base URL:", BASE_URL);
