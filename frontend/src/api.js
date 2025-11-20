@@ -5,11 +5,14 @@
 // ----------------------------------------------
 
 const BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ||
-  'https://hbw-backend.onrender.com/api';
-//  `http://${window.location.hostname}:8000/api`;
+  process.env.VITE_API_BACKEND_URL ||
+  `http://${window.location.hostname}:8000/api`;
+//  'https://hbw-backend.onrender.com/api';
 
-console.log("API Base URL:", BASE_URL);
+
+console.log("==> API Base URL:", BASE_URL);
+console.log("==> process.env.VITE_API_BACKEND_URL:", process.env.VITE_API_BACKEND_URL);
+console.log("==> import.meta.env.VITE_API_BACKEND_URL:", import.meta.env.VITE_API_BACKEND_URL);
 
 // Helper for JSON requests
 async function request(url, options = {}) {

@@ -35,5 +35,5 @@ services:
       # as the base for /expense, /income, etc.
       #
       # If you later migrate to another provider, you only change this value.
-      - key: VITE_API_BASE_URL
+      - key: VITE_API_BACKEND_URL
         value: "https://hbw-backend.onrender.com/api"
