@@ -24,16 +24,5 @@ services:
     dockerfilePath: frontend/Dockerfile
     autoDeploy: true
     envVars:
-      # Base URL for API calls in the frontend.
-      # This is the ONLY place where the backend URL appears.
-      #
-      # IMPORTANT: this assumes Render will host the backend service as:
-      #   https://hbw-backend.onrender.com
-      #
-      # and that your frontend code uses:
-      #   import.meta.env.VITE_API_BASE_URL
-      # as the base for /expense, /income, etc.
-      #
-      # If you later migrate to another provider, you only change this value.
       - key: VITE_API_BACKEND_URL
         value: "https://hbw-backend.onrender.com/api"

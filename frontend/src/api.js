@@ -6,7 +6,7 @@
 
 const BASE_URL =
   process.env.VITE_API_BACKEND_URL ||
-  `http://${window.location.hostname}:8000/api`;
+  `http://${window.location.hostname}/api`;
 //  'https://hbw-backend.onrender.com/api';
 
 
