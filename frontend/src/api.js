@@ -3,12 +3,10 @@
 // ----------------------------------------------
 // Determine API base URL
 // ----------------------------------------------
-const apiUrl = process.env.VITE_REACT_APP_API_URL;
 const BASE_URL =
   import.meta.env.VITE_REACT_APP_API_URL ||
   `https://${window.location.hostname}/api`;
 
-// Helper for JSON requests
 async function request(url, options = {}) {
   const res = await fetch(url, options);
   if (!res.ok) {
