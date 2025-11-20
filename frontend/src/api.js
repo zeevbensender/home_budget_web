@@ -7,14 +7,6 @@ const apiUrl = process.env.VITE_REACT_APP_API_URL;
 const BASE_URL =
   import.meta.env.VITE_REACT_APP_API_URL ||
   `https://${window.location.hostname}/api`;
-//  'https://hbw-backend.onrender.com/api';
-
-
-
-console.log("==> API Base URL:", BASE_URL);
-console.log("==> process.env.REACT_APP_API_URL:", process.env.VITE_REACT_APP_API_URL);
-console.log("==> import.meta.env.REACT_APP_API_URL:", import.meta.env.VITE_REACT_APP_API_URL);
-console.log("==> apiUrl:", apiUrl);
 
 // Helper for JSON requests
 async function request(url, options = {}) {
