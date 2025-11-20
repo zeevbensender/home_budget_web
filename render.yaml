@@ -24,5 +24,5 @@ services:
     dockerfilePath: frontend/Dockerfile
     autoDeploy: true
     envVars:
-      - key: VITE_API_BACKEND_URL
+      - key: REACT_APP_API_URL
         value: "https://hbw-backend.onrender.com/api"
