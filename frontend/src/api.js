@@ -3,16 +3,16 @@
 // ----------------------------------------------
 // Determine API base URL
 // ----------------------------------------------
-const apiUrl = process.env.REACT_APP_API_URL;
+const apiUrl = process.env.VITE_REACT_APP_API_URL;
 const BASE_URL =
-  process.env.REACT_APP_API_URL ||
+  process.env.VITE_REACT_APP_API_URL ||
   'https://hbw-backend.onrender.com/api';
 //  `https://${window.location.hostname}/api`;
 
 
 console.log("==> API Base URL:", BASE_URL);
-console.log("==> process.env.REACT_APP_API_URL:", process.env.REACT_APP_API_URL);
-console.log("==> import.meta.env.REACT_APP_API_URL:", import.meta.env.REACT_APP_API_URL);
+console.log("==> process.env.REACT_APP_API_URL:", process.env.VITE_REACT_APP_API_URL);
+console.log("==> import.meta.env.REACT_APP_API_URL:", import.meta.env.VITE_REACT_APP_API_URL);
 console.log("==> apiUrl:", apiUrl);
 
 // Helper for JSON requests
