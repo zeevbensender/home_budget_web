@@ -91,12 +91,22 @@
   },
   {
     "date": "2025-11-23",
-    "business": "Floral",
-    "category": "Home Gifts",
-    "amount": 45.0,
-    "account": "8136",
+    "business": "Mano Vino",
+    "category": "Food",
+    "amount": 110.0,
+    "account": "1008",
     "currency": "\u20aa",
     "notes": "",
     "id": 10
+  },
+  {
+    "date": "2025-11-23",
+    "business": "Kavim",
+    "category": "Commute",
+    "amount": 8.5,
+    "account": "8136",
+    "currency": "\u20aa",
+    "notes": "",
+    "id": 11
   }
 ]

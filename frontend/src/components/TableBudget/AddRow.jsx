@@ -1,5 +1,4 @@
 import { useState, memo, useCallback } from "react";
-import { createExpense, createIncome } from "../../api.js";
 
 function AddRowComponent({ type = "expense", onSave, onCancel }) {
   const [form, setForm] = useState({
@@ -18,9 +17,11 @@ function AddRowComponent({ type = "expense", onSave, onCancel }) {
 
   const save = async () => {
     const amountNum = parseFloat(form.amount);
-    const isValid = !!form.date && !Number.isNaN(amountNum) && amountNum !== 0;
+    const isValid =
+      !!form.date && !Number.isNaN(amountNum) && amountNum !== 0;
     if (!isValid) return;
 
+    // Build the payload and let the parent handle API calls.
     const base = {
       date: form.date,
       category: form.category,
@@ -36,14 +37,16 @@ function AddRowComponent({ type = "expense", onSave, onCancel }) {
         : base;
 
     try {
-      const created =
-        type === "expense"
-          ? await createExpense(payload)
-          : await createIncome(payload);
-      await onSave?.(created);
+      // Parent performs createExpense/createIncome.
+      if (onSave) {
+        await onSave(payload);
+      }
+
+      // Close form after save
       onCancel?.();
+
     } catch (err) {
-      console.error("Create failed:", err);
+      console.error("Save failed:", err);
     }
   };
 
