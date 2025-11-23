@@ -33,7 +33,7 @@ export default function TransactionModal({
 
     if (mode === "edit" && initialData) {
       setFormData({
-        type: initialData.type || "expense",
+        type: initialData.type ||  (initialData.business ? "expense" : "income"),
         date: initialData.date || "",
         business: initialData.business || "",
         category: initialData.category || "",

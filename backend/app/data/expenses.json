@@ -48,5 +48,65 @@
     "currency": "\u20aa",
     "notes": "",
     "id": 5
+  },
+  {
+    "date": "2025-11-23",
+    "business": "ampm",
+    "category": "Food",
+    "amount": 15.8,
+    "account": "1635",
+    "currency": "\u20aa",
+    "notes": "",
+    "id": 6
+  },
+  {
+    "date": "2025-11-10",
+    "business": "Railway",
+    "category": "Commute",
+    "amount": 12.4,
+    "account": "6136",
+    "currency": "\u20aa",
+    "notes": "",
+    "id": 7
+  },
+  {
+    "date": "2025-11-23",
+    "business": "Dog Groomer",
+    "category": "Dog",
+    "amount": 650.0,
+    "account": "Cash",
+    "currency": "\u20aa",
+    "notes": "",
+    "id": 8
+  },
+  {
+    "date": "2025-11-23",
+    "business": "Floral",
+    "category": "Home Gifts",
+    "amount": 45.0,
+    "account": "8136",
+    "currency": "\u20aa",
+    "notes": "",
+    "id": 9
+  },
+  {
+    "date": "2025-11-23",
+    "business": "Mano Vino",
+    "category": "Food",
+    "amount": 110.0,
+    "account": "1008",
+    "currency": "\u20aa",
+    "notes": "",
+    "id": 10
+  },
+  {
+    "date": "2025-11-23",
+    "business": "Kavim",
+    "category": "Commute",
+    "amount": 8.5,
+    "account": "8136",
+    "currency": "\u20aa",
+    "notes": "",
+    "id": 11
   }
 ]

@@ -25,5 +25,14 @@
     "currency": "\u20aa",
     "notes": "",
     "id": 3
+  },
+  {
+    "date": "2025-11-23",
+    "category": "Art",
+    "amount": 20000.0,
+    "account": "73077",
+    "currency": "\u20aa",
+    "notes": "",
+    "id": 4
   }
 ]

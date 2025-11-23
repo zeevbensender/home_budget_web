@@ -143,14 +143,6 @@ export default function App() {
 
         <h3>Expenses</h3>
 
-        {!isMobile && (
-            <button
-              className="btn btn-primary btn-sm mb-2"
-              onClick={() => setShowAddExpense(true)}
-            >
-              Add Expense
-            </button>
-        )}
         <div className="mobile-scroll">
           <TableBudget
             data={expenses}
@@ -164,19 +156,19 @@ export default function App() {
           />
         </div>
 
+        {/* ADD EXPENSE — now BELOW table */}
+        {!isMobile && !showAddExpense && (
+          <button
+            className="btn btn-primary btn-sm mt-2"
+            onClick={() => setShowAddExpense(true)}
+          >
+            Add Expense
+          </button>
+        )}
+
         <hr />
 
         <h3>Income</h3>
-
-
-        {!isMobile && (
-            <button
-              className="btn btn-primary btn-sm mb-2"
-              onClick={() => setShowAddIncome(true)}
-            >
-              Add Income
-            </button>
-        )}
 
         <div className="mobile-scroll">
           <TableBudget
@@ -190,6 +182,16 @@ export default function App() {
             onMobileEdit={handleMobileEdit}
           />
         </div>
+
+        {/* ADD INCOME — now BELOW table */}
+        {!isMobile && !showAddIncome && (
+          <button
+            className="btn btn-primary btn-sm mt-2"
+            onClick={() => setShowAddIncome(true)}
+          >
+            Add Income
+          </button>
+        )}
       </div>
 
       {/* MOBILE FLOATING ACTION BUTTON */}

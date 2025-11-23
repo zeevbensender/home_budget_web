@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [react()],
   server: {
     host: '0.0.0.0',
-    allowedHosts: ['pear'],
+    allowedHosts: ['pear', 'home_budget_frontend'],
     port: 5173,
   },
 })
