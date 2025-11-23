@@ -40,8 +40,8 @@ function AddRowComponent({ type = "expense", onSave, onCancel }) {
         type === "expense"
           ? await createExpense(payload)
           : await createIncome(payload);
-
-      onSave?.(created);
+      await onSave?.(created);
+      onCancel?.();
     } catch (err) {
       console.error("Create failed:", err);
     }
