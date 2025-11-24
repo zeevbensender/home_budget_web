@@ -8,12 +8,12 @@ Stabilize existing UI + backend with automated tests and cleanup before database
 ## 1. Testing
 
 ### 1.1 Backend API Tests
-- [ ] Healthcheck endpoint
-- [ ] Add expense
-- [ ] Edit expense
-- [ ] Delete expense
-- [ ] Bulk delete expenses
-- [ ] Add income
+- [x] Healthcheck endpoint
+- [x] Add expense
+- [x] Edit expense
+- [x] Delete expense
+- [x] Bulk delete expenses
+- [x] Add income
 - [ ] Edit income
 - [ ] Delete income
 - [ ] Bulk delete incomes
