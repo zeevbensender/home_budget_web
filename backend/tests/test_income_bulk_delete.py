@@ -14,13 +14,13 @@ def test_bulk_delete_income_minimal():
             "amount": 1000.0 + i,
             "account": "Bank",
         }
-        resp = client.post("/api/income", json=payload)
+        resp = client.post("/api/v1/income", json=payload)
         assert resp.status_code == 200
         created_ids.append(resp.json()["income"]["id"])
 
     # --- Step 2: Bulk delete them ---
     delete_payload = {"ids": created_ids}
-    delete_resp = client.post("/api/income/bulk-delete", json=delete_payload)
+    delete_resp = client.post("/api/v1/income/bulk-delete", json=delete_payload)
     assert delete_resp.status_code == 200
 
     body = delete_resp.json()

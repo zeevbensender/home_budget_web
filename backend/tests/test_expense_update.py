@@ -12,7 +12,7 @@ def test_update_expense_minimal():
         "amount": 50.0,
         "account": "Cash",
     }
-    create_resp = client.post("/api/expense", json=create_payload)
+    create_resp = client.post("/api/v1/expense", json=create_payload)
     assert create_resp.status_code == 200
     created = create_resp.json()["expense"]
     exp_id = created["id"]
@@ -22,7 +22,7 @@ def test_update_expense_minimal():
         "field": "category",
         "value": "Updated Category"
     }
-    update_resp = client.patch(f"/api/expense/{exp_id}", json=update_payload)
+    update_resp = client.patch(f"/api/v1/expense/{exp_id}", json=update_payload)
     assert update_resp.status_code == 200
 
     updated = update_resp.json()["expense"]

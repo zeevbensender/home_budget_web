@@ -22,7 +22,7 @@ Milestone 1 focused on establishing a functional end‑to‑end budget‑trackin
 - Modular router structure under `/api`.
 
 ### Routers Implemented
-- **Health Router**: `/api/health`, including automated test.
+- **Health Router**: `/api/v1/health`, including automated test.
 - **Expense Router**: CRUD operations backed by `expenses.json`.
 - **Income Router**: CRUD operations backed by `incomes.json`.
 - **Bulk Delete** functionality for both expenses and income.

@@ -14,7 +14,7 @@ def test_add_expense_minimal():
         # currency omitted → should auto-fill default
     }
 
-    response = client.post("/api/expense", json=payload)
+    response = client.post("/api/v1/expense", json=payload)
     assert response.status_code == 200
 
     body = response.json()

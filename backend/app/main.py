@@ -18,9 +18,9 @@ app.add_middleware(
 )
 
 # Routers
-app.include_router(health_router.router, prefix="/api")
-app.include_router(expense_router.router, prefix="/api")
-app.include_router(income_router.router, prefix="/api")
+app.include_router(health_router.router, prefix="/api/v1")
+app.include_router(expense_router.router, prefix="/api/v1")
+app.include_router(income_router.router, prefix="/api/v1")
 
 @app.get("/")
 def root():
