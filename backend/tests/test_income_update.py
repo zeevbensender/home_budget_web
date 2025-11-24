@@ -1,0 +1,34 @@
+from fastapi.testclient import TestClient
+from app.main import app
+
+client = TestClient(app)
+
+
+def test_update_income_minimal():
+    # --- Step 1: Create an income to update ---
+    create_payload = {
+        "date": "2025-11-10",
+        "category": "Salary",
+        "amount": 5000.0,
+        "account": "Bank",
+    }
+
+    create_resp = client.post("/api/income", json=create_payload)
+    assert create_resp.status_code == 200
+
+    inc_id = create_resp.json()["income"]["id"]
+
+    # --- Step 2: Update the category ---
+    update_payload = {
+        "field": "category",
+        "value": "Updated Category"
+    }
+
+    update_resp = client.patch(f"/api/income/{inc_id}", json=update_payload)
+    assert update_resp.status_code == 200
+
+    updated = update_resp.json()["income"]
+
+    # Assertions
+    assert updated["id"] == inc_id
+    assert updated["category"] == "Updated Category"
