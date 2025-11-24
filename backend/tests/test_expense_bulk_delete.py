@@ -14,13 +14,13 @@ def test_bulk_delete_expenses_minimal():
             "amount": 10.0 + i,
             "account": "Cash",
         }
-        resp = client.post("/api/expense", json=payload)
+        resp = client.post("/api/v1/expense", json=payload)
         assert resp.status_code == 200
         created_ids.append(resp.json()["expense"]["id"])
 
     # --- Step 2: Bulk delete them ---
     delete_payload = {"ids": created_ids}
-    delete_resp = client.post("/api/expense/bulk-delete", json=delete_payload)
+    delete_resp = client.post("/api/v1/expense/bulk-delete", json=delete_payload)
     assert delete_resp.status_code == 200
 
     body = delete_resp.json()

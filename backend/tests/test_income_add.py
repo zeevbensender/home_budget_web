@@ -14,7 +14,7 @@ def test_add_income_minimal():
         # currency omitted → should auto-fill
     }
 
-    response = client.post("/api/income", json=payload)
+    response = client.post("/api/v1/income", json=payload)
     assert response.status_code == 200
 
     body = response.json()

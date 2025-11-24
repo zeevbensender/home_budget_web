@@ -13,7 +13,7 @@ def test_update_income_minimal():
         "account": "Bank",
     }
 
-    create_resp = client.post("/api/income", json=create_payload)
+    create_resp = client.post("/api/v1/income", json=create_payload)
     assert create_resp.status_code == 200
 
     inc_id = create_resp.json()["income"]["id"]
@@ -24,7 +24,7 @@ def test_update_income_minimal():
         "value": "Updated Category"
     }
 
-    update_resp = client.patch(f"/api/income/{inc_id}", json=update_payload)
+    update_resp = client.patch(f"/api/v1/income/{inc_id}", json=update_payload)
     assert update_resp.status_code == 200
 
     updated = update_resp.json()["income"]
