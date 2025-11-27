@@ -7,6 +7,7 @@ that stores data in PostgreSQL using SQLAlchemy.
 from datetime import date
 from typing import Any
 
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.core.database import get_session_factory
@@ -93,7 +94,7 @@ class PostgresRepository(Repository):
             session.commit()
             session.refresh(item)
             return item.to_dict()
-        except Exception:
+        except SQLAlchemyError:
             session.rollback()
             raise
         finally:
@@ -118,7 +119,7 @@ class PostgresRepository(Repository):
             session.commit()
             session.refresh(item)
             return item.to_dict()
-        except Exception:
+        except SQLAlchemyError:
             session.rollback()
             raise
         finally:
@@ -136,7 +137,7 @@ class PostgresRepository(Repository):
             session.delete(item)
             session.commit()
             return True
-        except Exception:
+        except SQLAlchemyError:
             session.rollback()
             raise
         finally:
@@ -154,7 +155,7 @@ class PostgresRepository(Repository):
             )
             session.commit()
             return deleted
-        except Exception:
+        except SQLAlchemyError:
             session.rollback()
             raise
         finally:
