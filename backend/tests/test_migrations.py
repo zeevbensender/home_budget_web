@@ -3,8 +3,13 @@ Test that migrations can be run in offline mode (SQL generation).
 This validates the migration syntax without requiring a running database.
 """
 
+import os
 import subprocess
 import sys
+
+
+# Determine the backend directory relative to this test file
+BACKEND_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 def test_migration_generates_valid_sql():
@@ -15,7 +20,7 @@ def test_migration_generates_valid_sql():
         ],
         capture_output=True,
         text=True,
-        cwd="/home/runner/work/home_budget_web/home_budget_web/backend",
+        cwd=BACKEND_DIR,
         env={
             "DATABASE_URL": "postgresql://budget:budget@localhost:5432/budget_db",
             "PATH": "/usr/bin",
@@ -49,7 +54,7 @@ def test_migration_downgrade_generates_valid_sql():
         ],
         capture_output=True,
         text=True,
-        cwd="/home/runner/work/home_budget_web/home_budget_web/backend",
+        cwd=BACKEND_DIR,
         env={
             "DATABASE_URL": "postgresql://budget:budget@localhost:5432/budget_db",
             "PATH": "/usr/bin",

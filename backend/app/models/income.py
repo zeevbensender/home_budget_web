@@ -2,6 +2,9 @@
 Income model - maps the essential JSON fields from the PoC.
 """
 
+from datetime import date
+from decimal import Decimal
+
 from sqlalchemy import Integer, String, Numeric, Date, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -24,9 +27,9 @@ class Income(Base):
     __tablename__ = "incomes"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    date: Mapped[str] = mapped_column(Date, nullable=False)
+    date: Mapped[date] = mapped_column(Date, nullable=False)
     category: Mapped[str] = mapped_column(String(100), nullable=False)
-    amount: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
+    amount: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False)
     account: Mapped[str] = mapped_column(String(100), nullable=False)
     currency: Mapped[str] = mapped_column(String(10), nullable=False)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
