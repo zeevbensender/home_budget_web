@@ -1,5 +1,7 @@
 """Test migration and schema setup."""
 
+from decimal import Decimal
+
 import pytest
 from sqlalchemy import create_engine, inspect
 from sqlalchemy.orm import sessionmaker
@@ -87,7 +89,7 @@ class TestMigrationSchema:
             date=date(2025, 11, 1),
             business="Test Business",
             category="Test Category",
-            amount=100.50,
+            amount=Decimal("100.50"),
             account="Test Account",
             currency="₪",
             notes="Test notes",
@@ -99,14 +101,14 @@ class TestMigrationSchema:
         fetched = test_session.query(Expense).first()
         assert fetched is not None
         assert fetched.business == "Test Business"
-        assert fetched.amount == 100.50
+        assert fetched.amount == Decimal("100.50")
 
         # Update
-        fetched.amount = 200.00
+        fetched.amount = Decimal("200.00")
         test_session.commit()
 
         updated = test_session.query(Expense).first()
-        assert updated.amount == 200.00
+        assert updated.amount == Decimal("200.00")
 
         # Delete
         test_session.delete(fetched)
@@ -123,7 +125,7 @@ class TestMigrationSchema:
         income = Income(
             date=date(2025, 11, 1),
             category="Salary",
-            amount=5000.00,
+            amount=Decimal("5000.00"),
             account="Bank",
             currency="₪",
             notes="Monthly salary",
@@ -135,14 +137,14 @@ class TestMigrationSchema:
         fetched = test_session.query(Income).first()
         assert fetched is not None
         assert fetched.category == "Salary"
-        assert fetched.amount == 5000.00
+        assert fetched.amount == Decimal("5000.00")
 
         # Update
-        fetched.amount = 5500.00
+        fetched.amount = Decimal("5500.00")
         test_session.commit()
 
         updated = test_session.query(Income).first()
-        assert updated.amount == 5500.00
+        assert updated.amount == Decimal("5500.00")
 
         # Delete
         test_session.delete(fetched)
