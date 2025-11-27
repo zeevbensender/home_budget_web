@@ -1,6 +1,6 @@
 """SQLAlchemy ORM models for Home Budget Web."""
 
-from sqlalchemy import Column, Integer, String, Float, Date
+from sqlalchemy import Column, Integer, String, Float
 from sqlalchemy.orm import declarative_base
 
 Base = declarative_base()

@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 from typing import List, Dict, Any, Optional
 
 from app.core.settings import get_default_currency
+from app.core.storage import load_json, save_json
 
 
 class ExpenseRepositoryInterface(ABC):
@@ -39,7 +40,6 @@ class JsonExpenseRepository(ExpenseRepositoryInterface):
     """JSON-based expense repository."""
 
     def __init__(self, storage_module):
-        from app.core.storage import load_json, save_json
         self._load_json = load_json
         self._save_json = save_json
         self._expenses = load_json("expenses.json", [
