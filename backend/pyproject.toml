@@ -30,3 +30,8 @@ httpx = "^0.28"
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
+[tool.pytest.ini_options]
+markers = [
+    "smoke: marks tests as smoke tests (require PostgreSQL via docker-compose)",
+]
+

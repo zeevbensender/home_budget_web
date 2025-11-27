@@ -48,3 +48,21 @@ test:
 # ------------------------------
 rebuild:
 	$(COMPOSE) build --no-cache
+
+# ------------------------------
+# 🔥 Run smoke tests (DB integration)
+# ------------------------------
+smoke-test:
+	poetry run pytest tests/test_smoke_db.py -v
+
+# ------------------------------
+# 🗄️  Run Alembic migrations
+# ------------------------------
+migrate:
+	poetry run alembic upgrade head
+
+# ------------------------------
+# 🌱 Seed the database
+# ------------------------------
+seed:
+	poetry run python scripts/seed_db.py
