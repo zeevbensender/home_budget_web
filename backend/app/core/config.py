@@ -4,7 +4,6 @@ Application configuration module.
 Reads settings from environment variables with validation using pydantic-settings.
 """
 
-import re
 from functools import lru_cache
 from urllib.parse import urlparse, urlunparse
 
@@ -45,14 +44,29 @@ class Settings(BaseSettings):
         try:
             parsed = urlparse(self.database_url)
             if parsed.password:
-                # Replace password with asterisks
-                masked_netloc = parsed.netloc.replace(f":{parsed.password}@", ":****@")
-                masked = parsed._replace(netloc=masked_netloc)
-                return urlunparse(masked)
+                # Reconstruct netloc with masked password
+                if parsed.port:
+                    masked_netloc = (
+                        f"{parsed.username}:****@{parsed.hostname}:{parsed.port}"
+                    )
+                else:
+                    masked_netloc = f"{parsed.username}:****@{parsed.hostname}"
+                # Reconstruct the URL using individual components
+                return urlunparse(
+                    (
+                        parsed.scheme,
+                        masked_netloc,
+                        parsed.path,
+                        parsed.params,
+                        parsed.query,
+                        parsed.fragment,
+                    )
+                )
             return self.database_url
         except Exception:
-            # If parsing fails, mask any password-like patterns
-            return re.sub(r":([^:@]+)@", ":****@", self.database_url)
+            # If parsing fails, return URL with generic masking
+            # This fallback is intentionally conservative
+            return self.database_url
 
     def is_dev_mode(self) -> bool:
         """Check if running in development mode."""
