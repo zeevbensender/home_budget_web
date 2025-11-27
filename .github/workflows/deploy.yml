@@ -6,6 +6,80 @@ on:
   pull_request:
 
 jobs:
+  # ----------------------------
+  # 🔥 Smoke Test Job (DB integration)
+  # ----------------------------
+  smoke-test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: budget
+          POSTGRES_PASSWORD: budget
+          POSTGRES_DB: budget_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      PYTHON_VERSION: "3.11"
+      DATABASE_URL: postgresql://budget:budget@localhost:5432/budget_db
+
+    steps:
+      # ----------------------------
+      # 1️⃣  Checkout Repository
+      # ----------------------------
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # ----------------------------
+      # 2️⃣  Set Up Python
+      # ----------------------------
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      # ----------------------------
+      # 3️⃣  Install Poetry
+      # ----------------------------
+      - name: Install Poetry
+        run: pip install poetry poetry-plugin-export
+
+      # ----------------------------
+      # 4️⃣  Install Dependencies
+      # ----------------------------
+      - name: Install project dependencies
+        working-directory: backend
+        run: poetry install --no-interaction --no-root
+
+      # ----------------------------
+      # 5️⃣  Run Alembic Migrations
+      # ----------------------------
+      - name: Run database migrations
+        working-directory: backend
+        run: poetry run alembic upgrade head
+
+      # ----------------------------
+      # 6️⃣  Seed the Database
+      # ----------------------------
+      - name: Seed database
+        working-directory: backend
+        run: poetry run python scripts/seed_db.py
+
+      # ----------------------------
+      # 7️⃣  Run Smoke Tests
+      # ----------------------------
+      - name: Run smoke tests
+        working-directory: backend
+        run: PYTHONPATH=$PYTHONPATH:$(pwd) poetry run pytest tests/test_smoke_ci.py -v
+
   build-test-deploy:
     runs-on: ubuntu-latest
 
