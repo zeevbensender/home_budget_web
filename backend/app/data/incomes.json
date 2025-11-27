@@ -34,5 +34,41 @@
     "currency": "\u20aa",
     "notes": "",
     "id": 4
+  },
+  {
+    "date": "2025-11-10",
+    "category": "Salary",
+    "amount": 5000.0,
+    "account": "Bank",
+    "currency": "\u20aa",
+    "notes": null,
+    "id": 5
+  },
+  {
+    "date": "2025-11-10",
+    "category": "Updated Category",
+    "amount": 5000.0,
+    "account": "Bank",
+    "currency": "\u20aa",
+    "notes": null,
+    "id": 6
+  },
+  {
+    "date": "2025-11-10",
+    "category": "Salary",
+    "amount": 5000.0,
+    "account": "Bank",
+    "currency": "\u20aa",
+    "notes": null,
+    "id": 7
+  },
+  {
+    "date": "2025-11-10",
+    "category": "Updated Category",
+    "amount": 5000.0,
+    "account": "Bank",
+    "currency": "\u20aa",
+    "notes": null,
+    "id": 8
   }
 ]
