@@ -5,6 +5,10 @@ on:
     branches: [ "main" ]
   pull_request:
 
+# Minimal permissions required for the workflow
+permissions:
+  contents: read
+
 jobs:
   # ----------------------------
   # 🔥 Smoke Test Job (DB integration)
