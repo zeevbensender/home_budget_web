@@ -62,6 +62,10 @@ class JsonRepository(Repository):
         """Initialize the JSON repository with cached data."""
         self._cache: dict[str, list[dict[str, Any]]] = {}
 
+    def clear_cache(self) -> None:
+        """Clear the in-memory cache, forcing data to be reloaded from files."""
+        self._cache = {}
+
     def _get_filename(self, entity_type: str) -> str:
         """Get the JSON filename for an entity type."""
         return f"{entity_type}.json"
@@ -123,11 +127,11 @@ class JsonRepository(Repository):
     def delete(self, entity_type: str, entity_id: int) -> bool:
         """Delete an entity by ID."""
         items = self._load(entity_type)
-        for i, item in enumerate(items):
-            if item["id"] == entity_id:
-                items.pop(i)
-                self._save(entity_type)
-                return True
+        original_len = len(items)
+        self._cache[entity_type] = [item for item in items if item["id"] != entity_id]
+        if len(self._cache[entity_type]) < original_len:
+            self._save(entity_type)
+            return True
         return False
 
     def bulk_delete(self, entity_type: str, ids: list[int]) -> int:

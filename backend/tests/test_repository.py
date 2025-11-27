@@ -10,7 +10,7 @@ def repository() -> JsonRepository:
     """Create a fresh JsonRepository for testing."""
     repo = JsonRepository()
     # Clear the cache to start fresh
-    repo._cache = {}
+    repo.clear_cache()
     return repo
 
 

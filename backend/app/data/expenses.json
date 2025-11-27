@@ -188,5 +188,45 @@
     "currency": "\u20aa",
     "notes": "",
     "id": 19
+  },
+  {
+    "date": "2025-11-10",
+    "business": null,
+    "category": "Groceries",
+    "amount": 50.0,
+    "account": "Cash",
+    "currency": "\u20aa",
+    "notes": null,
+    "id": 20
+  },
+  {
+    "date": "2025-11-10",
+    "business": null,
+    "category": "Updated Category",
+    "amount": 50.0,
+    "account": "Cash",
+    "currency": "\u20aa",
+    "notes": null,
+    "id": 21
+  },
+  {
+    "date": "2025-12-01",
+    "business": "Test Store",
+    "category": "Testing",
+    "amount": 100.0,
+    "account": "Test Account",
+    "currency": "\u20aa",
+    "notes": "Test expense",
+    "id": 22
+  },
+  {
+    "date": "2025-12-01",
+    "business": "Original",
+    "category": "Testing",
+    "amount": 75.0,
+    "account": "Test",
+    "currency": "\u20aa",
+    "notes": "",
+    "id": 23
   }
 ]
