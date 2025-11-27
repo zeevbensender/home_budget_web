@@ -149,16 +149,19 @@ class TestSmokeDB:
         assert "message" in response.json()
 
     def test_list_expenses(self, app_client):
-        """Test listing expenses returns seeded data."""
+        """Test listing expenses returns data.
+
+        Note: The API currently uses JSON file storage. This smoke test verifies
+        that the full stack (migrations, seed, API) works together when PostgreSQL
+        is available, even though the API layer doesn't yet read from the database.
+        """
         response = app_client.get("/api/v1/expense")
         assert response.status_code == 200
-        # Current implementation uses JSON storage, not DB
-        # This test verifies the API is working
         data = response.json()
         assert isinstance(data, list)
 
     def test_list_incomes(self, app_client):
-        """Test listing incomes returns seeded data."""
+        """Test listing incomes returns data."""
         response = app_client.get("/api/v1/income")
         assert response.status_code == 200
         data = response.json()
