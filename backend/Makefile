@@ -6,6 +6,7 @@
 # Variables
 COMPOSE = docker compose
 SERVICE = backend
+DATABASE_URL ?= postgresql://budget:budget@localhost:5432/budget_db
 
 # ------------------------------
 # 🧱 Build the backend container
@@ -48,3 +49,20 @@ test:
 # ------------------------------
 rebuild:
 	$(COMPOSE) build --no-cache
+
+# ------------------------------
+# 🗄️ Run database migrations
+# ------------------------------
+migrate:
+	DATABASE_URL=$(DATABASE_URL) python -m alembic upgrade head
+
+# ------------------------------
+# 🌱 Seed the database with fixture data
+# ------------------------------
+seed:
+	DATABASE_URL=$(DATABASE_URL) python -m scripts.seed
+
+# ------------------------------
+# 🚀 Full database setup (migrate + seed)
+# ------------------------------
+db-setup: migrate seed
