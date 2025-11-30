@@ -24,10 +24,14 @@ from app.models import Expense, Income
 
 
 def get_database_url() -> str:
-    """Get database URL from environment."""
+    """Get database URL from environment.
+    
+    Default matches docker-compose-postgres.yaml for local development.
+    CI workflow uses different credentials via environment variable.
+    """
     return os.getenv(
         "DATABASE_URL",
-        "postgresql://test_user:test_password@localhost:5432/test_db"
+        "postgresql://poc_user:poc_password@localhost:5432/poc_db"
     )
 
 
