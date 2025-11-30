@@ -74,18 +74,18 @@ jobs:
       # ----------------------------
       - name: Run alembic upgrade head
         working-directory: backend
-        run: poetry run alembic upgrade head
+        run: PYTHONPATH=$PYTHONPATH:$(pwd) poetry run alembic upgrade head
 
       # ----------------------------
       # 6️⃣  Seed Test Data
       # ----------------------------
       - name: Seed test data
         working-directory: backend
-        run: poetry run python scripts/seed_test_data.py
+        run: PYTHONPATH=$PYTHONPATH:$(pwd) poetry run python scripts/seed_test_data.py
 
       # ----------------------------
       # 7️⃣  Run Smoke Tests
       # ----------------------------
       - name: Run smoke tests
         working-directory: backend
-        run: poetry run pytest -m smoke -v
+        run: PYTHONPATH=$PYTHONPATH:$(pwd) poetry run pytest -m smoke -v
