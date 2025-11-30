@@ -2,3 +2,4 @@ vnv-web-budget
 .idea
 __pycache__/
 .env
+backend/app/data/*.json
