@@ -77,11 +77,25 @@ jobs:
       - name: Alembic autogenerate sanity check (Postgres)
         working-directory: backend
         run: |
-          set -e
-          
           # Generate an autogenerate revision temporarily
           TEMP_MSG="ci-postgres-autogen-sanity-$(date +%s)"
-          PYTHONPATH=$PYTHONPATH:$(pwd) poetry run alembic revision --autogenerate -m "$TEMP_MSG" || true
+          
+          # Run autogenerate and capture exit code
+          set +e
+          PYTHONPATH=$PYTHONPATH:$(pwd) poetry run alembic revision --autogenerate -m "$TEMP_MSG"
+          ALEMBIC_EXIT_CODE=$?
+          set -e
+          
+          # Check if alembic command failed (not due to "no changes" which exits 0)
+          if [ $ALEMBIC_EXIT_CODE -ne 0 ]; then
+            echo ""
+            echo "============================================================"
+            echo "ERROR: Alembic autogenerate command failed (exit code: $ALEMBIC_EXIT_CODE)"
+            echo "============================================================"
+            echo "This could indicate database connection issues, configuration"
+            echo "problems, or import errors in your models."
+            exit $ALEMBIC_EXIT_CODE
+          fi
           
           # Check for uncommitted changes (new migration files)
           if [ -n "$(git status --porcelain)" ]; then
@@ -108,9 +122,10 @@ jobs:
             echo "============================================================"
             
             # Clean up generated files before exiting
-            git restore --staged . 2>/dev/null || true
-            git checkout -- . 2>/dev/null || true
-            git clean -fd 2>/dev/null || true
+            echo "Cleaning up generated files..."
+            git restore --staged . || echo "Note: git restore --staged had no effect"
+            git checkout -- . || echo "Note: git checkout had no effect"
+            git clean -fd || echo "Note: git clean had no effect"
             
             exit 1
           fi
@@ -118,8 +133,8 @@ jobs:
           echo "✅ No schema drift detected. ORM models match existing migrations."
           
           # Cleanup any potential leftovers
-          git checkout -- . 2>/dev/null || true
-          git clean -fd 2>/dev/null || true
+          git checkout -- . || true
+          git clean -fd || true
 
       # ----------------------------
       # 7️⃣  Dry-run Migration SQL (optional verification)
