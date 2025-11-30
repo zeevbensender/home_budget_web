@@ -108,65 +108,6 @@
     "currency": "\u20aa",
     "notes": "",
     "id": 11
-  },
-  {
-    "date": "2025-11-10",
-    "business": null,
-    "category": "Groceries",
-    "amount": 50.0,
-    "account": "Cash",
-    "currency": "\u20aa",
-    "notes": null,
-    "id": 12
-  },
-  {
-    "date": "2025-11-10",
-    "business": null,
-    "category": "Updated Category",
-    "amount": 50.0,
-    "account": "Cash",
-    "currency": "\u20aa",
-    "notes": null,
-    "id": 13
-  },
-  {
-    "date": "2025-11-10",
-    "business": null,
-    "category": "Groceries",
-    "amount": 50.0,
-    "account": "Cash",
-    "currency": "\u20aa",
-    "notes": null,
-    "id": 14
-  },
-  {
-    "date": "2025-11-10",
-    "business": null,
-    "category": "Updated Category",
-    "amount": 50.0,
-    "account": "Cash",
-    "currency": "\u20aa",
-    "notes": null,
-    "id": 15
-  },
-  {
-    "date": "2025-11-10",
-    "business": null,
-    "category": "Groceries",
-    "amount": 50.0,
-    "account": "Cash",
-    "currency": "\u20aa",
-    "notes": null,
-    "id": 16
-  },
-  {
-    "date": "2025-11-10",
-    "business": null,
-    "category": "Updated Category",
-    "amount": 50.0,
-    "account": "Cash",
-    "currency": "\u20aa",
-    "notes": null,
-    "id": 17
   }
+  
 ]
