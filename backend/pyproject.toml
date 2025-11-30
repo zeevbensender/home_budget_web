@@ -26,6 +26,11 @@ black = "^24.8"
 isort = "^5.13"
 httpx = "^0.28"
 
+[tool.pytest.ini_options]
+markers = [
+    "smoke: mark test as a smoke integration test (run with: pytest -m smoke)",
+]
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"

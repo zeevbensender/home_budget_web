@@ -1,0 +1,91 @@
+# GitHub Actions workflow: Postgres Smoke Integration Tests
+# This workflow spins up a Postgres container, runs alembic migrations,
+# seeds test data, and runs smoke tests that exercise key API flows.
+
+name: Smoke Integration Tests
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/smoke-integration.yml'
+  pull_request:
+    paths:
+      - 'backend/**'
+      - '.github/workflows/smoke-integration.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  smoke-tests:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_db
+      PYTHON_VERSION: "3.11"
+
+    steps:
+      # ----------------------------
+      # 1️⃣  Checkout Repository
+      # ----------------------------
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # ----------------------------
+      # 2️⃣  Set Up Python
+      # ----------------------------
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      # ----------------------------
+      # 3️⃣  Install Poetry
+      # ----------------------------
+      - name: Install Poetry
+        run: pip install poetry
+
+      # ----------------------------
+      # 4️⃣  Install Dependencies
+      # ----------------------------
+      - name: Install project dependencies
+        working-directory: backend
+        run: poetry install --no-interaction --no-root
+
+      # ----------------------------
+      # 5️⃣  Run Alembic Migrations
+      # ----------------------------
+      - name: Run alembic upgrade head
+        working-directory: backend
+        run: PYTHONPATH=$PYTHONPATH:$(pwd) poetry run alembic upgrade head
+
+      # ----------------------------
+      # 6️⃣  Seed Test Data
+      # ----------------------------
+      - name: Seed test data
+        working-directory: backend
+        run: PYTHONPATH=$PYTHONPATH:$(pwd) poetry run python scripts/seed_test_data.py
+
+      # ----------------------------
+      # 7️⃣  Run Smoke Tests
+      # ----------------------------
+      - name: Run smoke tests
+        working-directory: backend
+        run: PYTHONPATH=$PYTHONPATH:$(pwd) poetry run pytest -m smoke -v
