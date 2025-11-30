@@ -4,7 +4,7 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import expense_router, income_router, health_router
+from app.routers import expense_router, income_router, health_router, config_router
 
 app = FastAPI(title="Home Budget Web Backend")
 
@@ -21,6 +21,7 @@ app.add_middleware(
 app.include_router(health_router.router, prefix="/api/v1")
 app.include_router(expense_router.router, prefix="/api/v1")
 app.include_router(income_router.router, prefix="/api/v1")
+app.include_router(config_router.router, prefix="/api/v1")
 
 @app.get("/")
 def root():

@@ -1,9 +1,6 @@
-"""
-SQLAlchemy models for Home Budget Web PoC.
-"""
+"""SQLAlchemy models package."""
 
-from app.models.base import Base
 from app.models.expense import Expense
 from app.models.income import Income
 
-__all__ = ["Base", "Expense", "Income"]
+__all__ = ["Expense", "Income"]

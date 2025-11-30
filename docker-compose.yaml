@@ -4,16 +4,21 @@ services:
   # ----------------------------------
   db:
     image: postgres:15
-    container_name: home_budget_db
-    restart: always
+    container_name: poc_postgres
+    restart: unless-stopped
     environment:
-      POSTGRES_USER: budget
-      POSTGRES_PASSWORD: budget
-      POSTGRES_DB: budget_db
+      POSTGRES_USER: poc_user
+      POSTGRES_PASSWORD: poc_password
+      POSTGRES_DB: poc_db
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   # ----------------------------------
   # FastAPI Backend

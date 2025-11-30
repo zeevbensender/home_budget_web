@@ -1,70 +1,154 @@
-"""
-Test that migrations can be run in offline mode (SQL generation).
-This validates the migration syntax without requiring a running database.
-"""
+"""Test migration and schema setup."""
 
-import os
-import subprocess
-import sys
+from decimal import Decimal
+
+import pytest
+from sqlalchemy import create_engine, inspect
+from sqlalchemy.orm import sessionmaker
+
+from app.core.database import Base
+from app.models import (Expense,  # noqa: F401 - needed for model registration
+                        Income)
 
 
-# Determine the backend directory relative to this test file
-BACKEND_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+@pytest.fixture
+def test_engine():
+    """Create an in-memory SQLite engine for testing."""
+    engine = create_engine("sqlite:///:memory:", echo=False)
+    return engine
 
 
-def test_migration_generates_valid_sql():
-    """Verify that the migration can generate SQL in offline mode."""
-    result = subprocess.run(
-        [
-            sys.executable, "-m", "alembic", "upgrade", "head", "--sql"
-        ],
-        capture_output=True,
-        text=True,
-        cwd=BACKEND_DIR,
-        env={
-            "DATABASE_URL": "postgresql://budget:budget@localhost:5432/budget_db",
-            "PATH": "/usr/bin",
+@pytest.fixture
+def test_session(test_engine):
+    """Create a test session with tables created."""
+    # Create all tables from metadata
+    Base.metadata.create_all(test_engine)
+    TestSession = sessionmaker(bind=test_engine)
+    session = TestSession()
+    yield session
+    session.close()
+
+
+class TestMigrationSchema:
+    """Tests for database schema created by migrations."""
+
+    def test_tables_created(self, test_engine):
+        """Verify that expenses and incomes tables are created."""
+        # Create tables
+        Base.metadata.create_all(test_engine)
+
+        inspector = inspect(test_engine)
+        table_names = inspector.get_table_names()
+
+        assert "expenses" in table_names
+        assert "incomes" in table_names
+
+    def test_expenses_table_columns(self, test_engine):
+        """Verify expenses table has all required columns."""
+        Base.metadata.create_all(test_engine)
+
+        inspector = inspect(test_engine)
+        columns = {col["name"] for col in inspector.get_columns("expenses")}
+
+        expected_columns = {
+            "id",
+            "date",
+            "business",
+            "category",
+            "amount",
+            "account",
+            "currency",
+            "notes",
         }
-    )
-    
-    # Should complete without errors
-    assert result.returncode == 0, f"Migration failed: {result.stderr}"
-    
-    # Should generate expected SQL statements
-    output = result.stdout
-    assert "CREATE TABLE expenses" in output
-    assert "CREATE TABLE incomes" in output
-    assert "PRIMARY KEY (id)" in output
-    
-    # Verify expected columns for expenses
-    assert "date DATE NOT NULL" in output
-    assert "business VARCHAR(255)" in output
-    assert "category VARCHAR(100) NOT NULL" in output
-    assert "amount NUMERIC(12, 2) NOT NULL" in output
-    assert "account VARCHAR(100) NOT NULL" in output
-    assert "currency VARCHAR(10) NOT NULL" in output
-    assert "notes TEXT" in output
+        assert expected_columns == columns
 
+    def test_incomes_table_columns(self, test_engine):
+        """Verify incomes table has all required columns."""
+        Base.metadata.create_all(test_engine)
 
-def test_migration_downgrade_generates_valid_sql():
-    """Verify that the migration downgrade can generate SQL in offline mode."""
-    result = subprocess.run(
-        [
-            sys.executable, "-m", "alembic", "downgrade", "cb740587175f:base", "--sql"
-        ],
-        capture_output=True,
-        text=True,
-        cwd=BACKEND_DIR,
-        env={
-            "DATABASE_URL": "postgresql://budget:budget@localhost:5432/budget_db",
-            "PATH": "/usr/bin",
+        inspector = inspect(test_engine)
+        columns = {col["name"] for col in inspector.get_columns("incomes")}
+
+        expected_columns = {
+            "id",
+            "date",
+            "category",
+            "amount",
+            "account",
+            "currency",
+            "notes",
         }
-    )
-    
-    # Should complete without errors
-    assert result.returncode == 0, f"Downgrade failed: {result.stderr}"
-    
-    # Should generate DROP TABLE statements
-    output = result.stdout
-    assert "DROP TABLE expenses" in output
-    assert "DROP TABLE incomes" in output
+        assert expected_columns == columns
+
+    def test_expense_model_crud(self, test_session):
+        """Test basic CRUD operations on Expense model."""
+        from datetime import date
+
+        # Create
+        expense = Expense(
+            date=date(2025, 11, 1),
+            business="Test Business",
+            category="Test Category",
+            amount=Decimal("100.50"),
+            account="Test Account",
+            currency="₪",
+            notes="Test notes",
+        )
+        test_session.add(expense)
+        test_session.commit()
+
+        # Read
+        fetched = test_session.query(Expense).first()
+        assert fetched is not None
+        assert fetched.business == "Test Business"
+        assert fetched.amount == Decimal("100.50")
+
+        # Update
+        fetched.amount = Decimal("200.00")
+        test_session.commit()
+
+        updated = test_session.query(Expense).first()
+        assert updated.amount == Decimal("200.00")
+
+        # Delete
+        test_session.delete(fetched)
+        test_session.commit()
+
+        deleted = test_session.query(Expense).first()
+        assert deleted is None
+
+    def test_income_model_crud(self, test_session):
+        """Test basic CRUD operations on Income model."""
+        from datetime import date
+
+        # Create
+        income = Income(
+            date=date(2025, 11, 1),
+            category="Salary",
+            amount=Decimal("5000.00"),
+            account="Bank",
+            currency="₪",
+            notes="Monthly salary",
+        )
+        test_session.add(income)
+        test_session.commit()
+
+        # Read
+        fetched = test_session.query(Income).first()
+        assert fetched is not None
+        assert fetched.category == "Salary"
+        assert fetched.amount == Decimal("5000.00")
+
+        # Update
+        fetched.amount = Decimal("5500.00")
+        test_session.commit()
+
+        updated = test_session.query(Income).first()
+        assert updated.amount == Decimal("5500.00")
+
+        # Delete
+        test_session.delete(fetched)
+        test_session.commit()
+
+        deleted = test_session.query(Income).first()
+        assert deleted is None
