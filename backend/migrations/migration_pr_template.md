@@ -48,6 +48,6 @@
 
 ## Approval
 - Reviewers:
-  - DB reviewer:
-  - Service reviewer:
-  - Release manager:
+  - DB reviewer: @zeevbensender and project assistant
+  - Service reviewer: @zeevbensender and project assistant
+  - Release manager: @zeevbensender and project assistant
