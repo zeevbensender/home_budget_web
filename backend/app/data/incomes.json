@@ -88,5 +88,41 @@
     "currency": "\u20aa",
     "notes": null,
     "id": 10
+  },
+  {
+    "date": "2025-11-10",
+    "category": "Salary",
+    "amount": 5000.0,
+    "account": "Bank",
+    "currency": "\u20aa",
+    "notes": null,
+    "id": 11
+  },
+  {
+    "date": "2025-11-10",
+    "category": "Updated Category",
+    "amount": 5000.0,
+    "account": "Bank",
+    "currency": "\u20aa",
+    "notes": null,
+    "id": 12
+  },
+  {
+    "date": "2025-01-25",
+    "category": "Smoke Test Income",
+    "amount": 1500.0,
+    "account": "Test Bank",
+    "currency": "\u20aa",
+    "notes": "Created by smoke test",
+    "id": 13
+  },
+  {
+    "date": "2025-01-25",
+    "category": "Smoke Test Income",
+    "amount": 1500.0,
+    "account": "Test Bank",
+    "currency": "\u20aa",
+    "notes": "Created by smoke test",
+    "id": 14
   }
 ]

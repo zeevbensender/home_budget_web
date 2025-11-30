@@ -108,6 +108,45 @@
     "currency": "\u20aa",
     "notes": "",
     "id": 11
+  },
+  {
+    "date": "2025-11-10",
+    "business": null,
+    "category": "Groceries",
+    "amount": 50.0,
+    "account": "Cash",
+    "currency": "\u20aa",
+    "notes": null,
+    "id": 12
+  },
+  {
+    "date": "2025-11-10",
+    "business": null,
+    "category": "Updated Category",
+    "amount": 50.0,
+    "account": "Cash",
+    "currency": "\u20aa",
+    "notes": null,
+    "id": 13
+  },
+  {
+    "date": "2025-01-25",
+    "business": "Smoke Test Business",
+    "category": "Test Category",
+    "amount": 99.99,
+    "account": "Test Account",
+    "currency": "\u20aa",
+    "notes": "Created by smoke test",
+    "id": 14
+  },
+  {
+    "date": "2025-01-25",
+    "business": "Smoke Test Business",
+    "category": "Test Category",
+    "amount": 99.99,
+    "account": "Test Account",
+    "currency": "\u20aa",
+    "notes": "Created by smoke test",
+    "id": 15
   }
-  
 ]
