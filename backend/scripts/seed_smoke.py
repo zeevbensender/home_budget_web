@@ -60,22 +60,25 @@ def seed_expenses(session, expenses_data: list[dict]) -> int:
     added = 0
     for item in expenses_data:
         # Check if expense already exists (by date, business, and amount)
-        existing = (
-            session.query(Expense)
-            .filter(
-                Expense.date == parse_date(item["date"]),
-                Expense.business == item["business"],
-                Expense.amount == Decimal(item["amount"]),
-            )
-            .first()
+        # Handle nullable business field properly
+        business = item.get("business")
+        query = session.query(Expense).filter(
+            Expense.date == parse_date(item["date"]),
+            Expense.amount == Decimal(item["amount"]),
         )
+        if business is None:
+            query = query.filter(Expense.business.is_(None))
+        else:
+            query = query.filter(Expense.business == business)
+
+        existing = query.first()
 
         if existing:
             continue
 
         expense = Expense(
             date=parse_date(item["date"]),
-            business=item["business"],
+            business=business,
             category=item["category"],
             amount=Decimal(item["amount"]),
             account=item["account"],
@@ -89,7 +92,11 @@ def seed_expenses(session, expenses_data: list[dict]) -> int:
 
 
 def seed_incomes(session, incomes_data: list[dict]) -> int:
-    """Seed incomes from fixture data. Returns count of records added."""
+    """Seed incomes from fixture data. Returns count of records added.
+
+    Note: Uniqueness is checked by date+category+amount since Income model
+    doesn't have a business field (unlike Expense which uses date+business+amount).
+    """
     added = 0
     for item in incomes_data:
         # Check if income already exists (by date, category, and amount)
