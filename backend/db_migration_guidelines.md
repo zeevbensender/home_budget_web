@@ -92,9 +92,56 @@ Examples: string→enum, JSON restructuring, date normalization.
 - CI job suggestions (GitHub Actions):
   - lint (python/JS), unit-tests, type-check
   - migration-check (autogenerate diff sanity + `alembic upgrade --sql` dry-run)
+  - **postgres-migration-check** (Postgres-based autogenerate for higher fidelity)
   - smoke-integration (optional, use a service container postgres)
 
-Suggested job names: test, lint, migration-check, smoke-test.
+Suggested job names: test, lint, migration-check, postgres-migration-check, smoke-test.
+
+### 8.1 Postgres Migration Check (CI Job)
+
+The `postgres-migration-check` workflow (`.github/workflows/postgres-migration-check.yml`) provides
+higher-fidelity schema drift detection by running Alembic autogenerate against a real Postgres
+database instead of SQLite.
+
+**What it does:**
+1. Starts a Postgres 15 service container in CI
+2. Applies all existing migrations (`alembic upgrade head`)
+3. Runs `alembic revision --autogenerate` to detect any uncommitted schema changes
+4. Fails the build if new migration files are generated, with an actionable error message
+5. Verifies that migration SQL can be generated (`alembic upgrade --sql`)
+
+**Why Postgres instead of SQLite?**
+- Postgres-specific types (e.g., `ARRAY`, `JSONB`, `UUID`) are not supported by SQLite
+- Postgres constraints and indexes may behave differently
+- Some column type changes are only detected correctly with Postgres
+- Production uses Postgres, so CI should match production fidelity
+
+**Limitations:**
+- The autogenerate check may not detect all types of drift (e.g., certain constraint changes)
+- Postgres-specific features like extensions must be enabled in the service container
+- The check adds ~1-2 minutes to CI time due to Postgres startup
+
+**Fallback:**
+- If the Postgres-based check fails unexpectedly (e.g., service container issues), you can:
+  1. Re-run the CI job (transient failures)
+  2. Run the check locally: `DATABASE_URL=postgresql://... alembic revision --autogenerate -m "test"`
+  3. Use the SQLite-based `migration-check.yml` as a fallback (lower fidelity)
+
+**Local testing:**
+```bash
+# Start a local Postgres container
+docker run -d --name test-postgres -e POSTGRES_USER=test_user \
+  -e POSTGRES_PASSWORD=test_password -e POSTGRES_DB=test_db -p 5432:5432 postgres:15
+
+# Run the autogenerate check
+export DATABASE_URL=postgresql://test_user:test_password@localhost:5432/test_db
+cd backend
+poetry run alembic upgrade head
+poetry run alembic revision --autogenerate -m "test-check"
+
+# Clean up
+docker stop test-postgres && docker rm test-postgres
+```
 
 ---
 

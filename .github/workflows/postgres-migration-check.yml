@@ -1,0 +1,148 @@
+# GitHub Actions workflow: Postgres Migration Check
+# This workflow runs Alembic autogenerate against a real Postgres database
+# to detect schema drift with higher fidelity than SQLite-based checks.
+
+name: Postgres Migration Check
+
+on:
+  pull_request:
+    paths:
+      - 'backend/**'
+      - '.github/workflows/postgres-migration-check.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  postgres-migration-check:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_db
+      PYTHON_VERSION: "3.11"
+
+    steps:
+      # ----------------------------
+      # 1️⃣  Checkout Repository
+      # ----------------------------
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # ----------------------------
+      # 2️⃣  Set Up Python
+      # ----------------------------
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      # ----------------------------
+      # 3️⃣  Install Poetry
+      # ----------------------------
+      - name: Install Poetry
+        run: pip install poetry
+
+      # ----------------------------
+      # 4️⃣  Install Dependencies
+      # ----------------------------
+      - name: Install project dependencies
+        working-directory: backend
+        run: poetry install --no-interaction --no-root
+
+      # ----------------------------
+      # 5️⃣  Apply Existing Migrations
+      # ----------------------------
+      - name: Apply existing migrations
+        working-directory: backend
+        run: PYTHONPATH=$PYTHONPATH:$(pwd) poetry run alembic upgrade head
+
+      # ----------------------------
+      # 6️⃣  Alembic Autogenerate Sanity Check (Postgres)
+      # ----------------------------
+      - name: Alembic autogenerate sanity check (Postgres)
+        working-directory: backend
+        run: |
+          # Generate an autogenerate revision temporarily
+          TEMP_MSG="ci-postgres-autogen-sanity-$(date +%s)"
+          
+          # Run autogenerate and capture exit code
+          set +e
+          PYTHONPATH=$PYTHONPATH:$(pwd) poetry run alembic revision --autogenerate -m "$TEMP_MSG"
+          ALEMBIC_EXIT_CODE=$?
+          set -e
+          
+          # Check if alembic command failed (not due to "no changes" which exits 0)
+          if [ $ALEMBIC_EXIT_CODE -ne 0 ]; then
+            echo ""
+            echo "============================================================"
+            echo "ERROR: Alembic autogenerate command failed (exit code: $ALEMBIC_EXIT_CODE)"
+            echo "============================================================"
+            echo "This could indicate database connection issues, configuration"
+            echo "problems, or import errors in your models."
+            exit $ALEMBIC_EXIT_CODE
+          fi
+          
+          # Check for uncommitted changes (new migration files)
+          if [ -n "$(git status --porcelain)" ]; then
+            echo ""
+            echo "============================================================"
+            echo "ERROR: Alembic autogenerate produced uncommitted changes."
+            echo "============================================================"
+            echo ""
+            echo "This typically means you updated ORM models but did not commit"
+            echo "the corresponding migration(s)."
+            echo ""
+            echo "What to do:"
+            echo "  1. Run locally: alembic revision --autogenerate -m \"<description>\""
+            echo "  2. Review the generated migration file carefully"
+            echo "  3. Commit and push the new migration file"
+            echo ""
+            echo "Files that would be created:"
+            git status --porcelain
+            echo ""
+            echo "============================================================"
+            echo "NOTE: This check runs against Postgres for higher fidelity."
+            echo "Some Postgres-specific types or constraints may not be detected"
+            echo "by SQLite-based checks."
+            echo "============================================================"
+            
+            # Clean up generated files before exiting
+            echo "Cleaning up generated files..."
+            git restore --staged . || echo "Note: git restore --staged had no effect"
+            git checkout -- . || echo "Note: git checkout had no effect"
+            git clean -fd || echo "Note: git clean had no effect"
+            
+            exit 1
+          fi
+          
+          echo "✅ No schema drift detected. ORM models match existing migrations."
+          
+          # Cleanup any potential leftovers
+          git checkout -- . || true
+          git clean -fd || true
+
+      # ----------------------------
+      # 7️⃣  Dry-run Migration SQL (optional verification)
+      # ----------------------------
+      - name: Verify migration SQL generation
+        working-directory: backend
+        run: |
+          set -e
+          echo "Generating SQL for all migrations (dry-run verification)..."
+          PYTHONPATH=$PYTHONPATH:$(pwd) poetry run alembic upgrade head --sql > /dev/null
+          echo "✅ Migration SQL generation successful."
