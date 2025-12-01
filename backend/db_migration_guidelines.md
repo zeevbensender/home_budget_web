@@ -280,7 +280,7 @@ This single document:
 ---
 
 If you'd like, I can:
-- Commit this as `backend/db_migration_guidelines.md` in the repo and create/commit a `backend/migrations/migration_pr_template.md` snippet (requires permission to push).
+- Commit this as `backend/db_migration_guidelines.md` in the repo. The migration PR template is at [`.github/PULL_REQUEST_TEMPLATE/migration_pr_template.md`](../.github/PULL_REQUEST_TEMPLATE/migration_pr_template.md).
 - Produce a GitHub Actions migration-check workflow and a PR body template file ready to paste.
 
 What I still need to finalize any automated snippets or CI workflows:
