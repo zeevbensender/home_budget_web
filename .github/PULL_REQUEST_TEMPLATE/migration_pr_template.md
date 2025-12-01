@@ -32,6 +32,16 @@ Use this template for PRs that include Alembic migrations. Paste and fill out th
 - Post-migration SQL checks (copyable)
 - Dashboards/alerts to watch
 
+### Grafana Dashboard Links
+<!-- Fill in the URLs to relevant Grafana dashboards for monitoring this migration -->
+| Dashboard | URL |
+|-----------|-----|
+| Overview | `<GRAFANA_URL>/d/home-budget-overview` |
+| API Performance | `<GRAFANA_URL>/d/home-budget-api` |
+| Database Metrics | `<GRAFANA_URL>/d/home-budget-db` |
+
+<!-- See docs/grafana-prometheus-integration.md for setup instructions -->
+
 ## Tests
 - Unit/integration tests added
 - CI links
