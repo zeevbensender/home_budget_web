@@ -97,7 +97,7 @@ jobs:
       # ----------------------------
       - name: Seed test data
         working-directory: backend
-        run: PYTHONPATH=$PYTHONPATH:$(pwd) poetry run python scripts/seed_test_data.py
+        run: PYTHONPATH=$PYTHONPATH:$(pwd) poetry run python scripts/seed_smoke.py
 
       # ----------------------------
       # 8️⃣  Run Smoke Tests

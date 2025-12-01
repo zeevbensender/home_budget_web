@@ -1,0 +1,29 @@
+[
+  {
+    "date": "2025-01-15",
+    "business": "Test Supermarket",
+    "category": "Groceries",
+    "amount": "150.50",
+    "account": "Credit Card",
+    "currency": "₪",
+    "notes": "Weekly groceries for smoke test"
+  },
+  {
+    "date": "2025-01-20",
+    "business": "Test Gas Station",
+    "category": "Transport",
+    "amount": "200.00",
+    "account": "Debit Card",
+    "currency": "₪",
+    "notes": "Fuel for smoke test"
+  },
+  {
+    "date": "2025-01-22",
+    "business": "Test Restaurant",
+    "category": "Dining",
+    "amount": "85.00",
+    "account": "Credit Card",
+    "currency": "₪",
+    "notes": "Dinner for smoke test"
+  }
+]

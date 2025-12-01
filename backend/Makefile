@@ -73,3 +73,9 @@ migrate-history:
 # Downgrade one migration
 migrate-down:
 	$(COMPOSE) run --rm $(SERVICE) poetry run alembic downgrade -1
+
+# ------------------------------
+# 🌱 Seed smoke test data
+# ------------------------------
+seed-smoke:
+	$(COMPOSE) run --rm $(SERVICE) poetry run python scripts/seed_smoke.py
