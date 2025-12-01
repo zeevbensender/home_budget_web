@@ -52,7 +52,12 @@ The smoke integration tests:
 
 7. Seed test data (optional):
    ```bash
-   poetry run python scripts/seed_test_data.py
+   poetry run python scripts/seed_smoke.py
+   ```
+   
+   Or using make (from the backend directory):
+   ```bash
+   make seed-smoke
    ```
 
 8. Run smoke tests:
@@ -118,3 +123,33 @@ The seed script skips seeding if data already exists. To reset, drop and recreat
 docker-compose -f docker-compose-postgres.yaml down -v
 docker-compose -f docker-compose-postgres.yaml up -d
 ```
+
+## Smoke Test Fixtures
+
+The smoke test seed script loads data from JSON fixture files located in `backend/scripts/fixtures/`:
+
+- `expenses.json` - Sample expense records
+- `incomes.json` - Sample income records
+
+The `seed_smoke.py` script is idempotent - it checks for existing records before inserting new data, so it can be run multiple times safely.
+
+### Adding or Modifying Fixtures
+
+To add new test data, edit the JSON files in `backend/scripts/fixtures/`. Each record should include:
+
+**Expenses:**
+- `date` - ISO date format (YYYY-MM-DD)
+- `business` - Business name
+- `category` - Expense category
+- `amount` - Decimal amount as string
+- `account` - Account name
+- `currency` - Currency symbol (default: ₪)
+- `notes` - Optional description
+
+**Incomes:**
+- `date` - ISO date format (YYYY-MM-DD)
+- `category` - Income category
+- `amount` - Decimal amount as string
+- `account` - Account name
+- `currency` - Currency symbol (default: ₪)
+- `notes` - Optional description

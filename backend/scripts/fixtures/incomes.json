@@ -1,0 +1,18 @@
+[
+  {
+    "date": "2025-01-01",
+    "category": "Salary",
+    "amount": "10000.00",
+    "account": "Bank Account",
+    "currency": "₪",
+    "notes": "Monthly salary for smoke test"
+  },
+  {
+    "date": "2025-01-15",
+    "category": "Freelance",
+    "amount": "2500.00",
+    "account": "PayPal",
+    "currency": "₪",
+    "notes": "Freelance project for smoke test"
+  }
+]
