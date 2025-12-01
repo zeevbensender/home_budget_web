@@ -63,28 +63,44 @@ jobs:
         run: pip install poetry
 
       # ----------------------------
-      # 4️⃣  Install Dependencies
+      # 4️⃣  Cache Poetry dependencies
+      # ----------------------------
+      - name: Cache Poetry dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/pypoetry
+            ~/.cache/pip
+            backend/.venv
+          key: ${{ runner.os }}-poetry-${{ hashFiles('backend/poetry.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-poetry-
+
+      # ----------------------------
+      # 5️⃣  Install Dependencies
       # ----------------------------
       - name: Install project dependencies
         working-directory: backend
-        run: poetry install --no-interaction --no-root
+        run: |
+          poetry config virtualenvs.in-project true
+          poetry install --no-interaction --no-root
 
       # ----------------------------
-      # 5️⃣  Run Alembic Migrations
+      # 6️⃣  Run Alembic Migrations
       # ----------------------------
       - name: Run alembic upgrade head
         working-directory: backend
         run: PYTHONPATH=$PYTHONPATH:$(pwd) poetry run alembic upgrade head
 
       # ----------------------------
-      # 6️⃣  Seed Test Data
+      # 7️⃣  Seed Test Data
       # ----------------------------
       - name: Seed test data
         working-directory: backend
         run: PYTHONPATH=$PYTHONPATH:$(pwd) poetry run python scripts/seed_test_data.py
 
       # ----------------------------
-      # 7️⃣  Run Smoke Tests
+      # 8️⃣  Run Smoke Tests
       # ----------------------------
       - name: Run smoke tests
         working-directory: backend

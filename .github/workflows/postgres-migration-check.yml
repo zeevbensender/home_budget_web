@@ -58,21 +58,37 @@ jobs:
         run: pip install poetry
 
       # ----------------------------
-      # 4️⃣  Install Dependencies
+      # 4️⃣  Cache Poetry dependencies
+      # ----------------------------
+      - name: Cache Poetry dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/pypoetry
+            ~/.cache/pip
+            backend/.venv
+          key: ${{ runner.os }}-poetry-${{ hashFiles('backend/poetry.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-poetry-
+
+      # ----------------------------
+      # 5️⃣  Install Dependencies
       # ----------------------------
       - name: Install project dependencies
         working-directory: backend
-        run: poetry install --no-interaction --no-root
+        run: |
+          poetry config virtualenvs.in-project true
+          poetry install --no-interaction --no-root
 
       # ----------------------------
-      # 5️⃣  Apply Existing Migrations
+      # 6️⃣  Apply Existing Migrations
       # ----------------------------
       - name: Apply existing migrations
         working-directory: backend
         run: PYTHONPATH=$PYTHONPATH:$(pwd) poetry run alembic upgrade head
 
       # ----------------------------
-      # 6️⃣  Alembic Autogenerate Sanity Check (Postgres)
+      # 7️⃣  Alembic Autogenerate Sanity Check (Postgres)
       # ----------------------------
       - name: Alembic autogenerate sanity check (Postgres)
         working-directory: backend
@@ -137,7 +153,7 @@ jobs:
           git clean -fd || true
 
       # ----------------------------
-      # 7️⃣  Dry-run Migration SQL (optional verification)
+      # 8️⃣  Dry-run Migration SQL (optional verification)
       # ----------------------------
       - name: Verify migration SQL generation
         working-directory: backend

@@ -16,16 +16,30 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      - name: Install Poetry and dependencies (backend)
-        working-directory: backend
+      - name: Install Poetry
         run: |
           python -m pip install --upgrade pip
           pip install poetry
-          poetry config virtualenvs.create false
+
+      - name: Cache Poetry dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/pypoetry
+            ~/.cache/pip
+            backend/.venv
+          key: ${{ runner.os }}-poetry-${{ hashFiles('backend/poetry.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-poetry-
+
+      - name: Install dependencies (backend)
+        working-directory: backend
+        run: |
+          poetry config virtualenvs.in-project true
           poetry install --no-interaction --no-ansi
 
       - name: Run unit tests (backend)
