@@ -20,37 +20,36 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install Poetry
+      - name: Install Poetry and dependencies (backend)
+        working-directory: backend
         run: |
           python -m pip install --upgrade pip
           pip install poetry
           poetry config virtualenvs.create false
           poetry install --no-interaction --no-ansi
 
-      - name: Run unit tests
+      - name: Run unit tests (backend)
+        working-directory: backend
         run: poetry run pytest -q
 
-      - name: Alembic autogenerate sanity check
+      - name: Alembic autogenerate sanity check (backend)
+        working-directory: backend
         env:
           DATABASE_URL: "sqlite:///./tmp_ci_db.sqlite"
         run: |
           set -e
-          # Generate an autogenerate revision temporarily
           TEMP_MSG="ci-autogen-sanity-$(date +%s)"
           poetry run alembic revision --autogenerate -m "$TEMP_MSG" || true
 
-          # If autogenerate created uncommitted files, fail the job and show a helpful message
           if [ -n "$(git status --porcelain)" ]; then
             echo "ERROR: Alembic autogenerate produced uncommitted changes."
             echo "This typically means you updated ORM models but did not commit the corresponding migration(s)."
-            echo "Run: alembic revision --autogenerate -m \"<desc>\" and commit the new migration file."
-            # Clean up generated files before exiting
+            echo "Run: cd backend && alembic revision --autogenerate -m \"<desc>\" and commit the new migration file."
             git restore --staged . || true
             git checkout -- . || true
             git clean -fd || true
             exit 1
           fi
 
-          # Cleanup in case no changes: ensure no leftover files
           git checkout -- . || true
           git clean -fd || true
