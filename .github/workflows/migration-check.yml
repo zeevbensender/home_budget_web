@@ -55,7 +55,7 @@ jobs:
           # Apply migrations first
           poetry run alembic upgrade head
           
-          # Use alembic check to detect schema drift without creating files
+          # Use alembic check (requires Alembic 1.9+) to detect schema drift without creating files
           # Exit code 0 = no drift, non-zero = drift detected or error
           if ! poetry run alembic check; then
             echo "ERROR: Alembic detected schema drift."
