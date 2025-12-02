@@ -93,31 +93,17 @@ jobs:
       - name: Alembic autogenerate sanity check (Postgres)
         working-directory: backend
         run: |
-          # Generate an autogenerate revision temporarily
-          TEMP_MSG="ci-postgres-autogen-sanity-$(date +%s)"
-          
-          # Run autogenerate and capture exit code
+          # Use alembic check (requires Alembic 1.9+) to detect schema drift without creating files
+          # Exit code 0 = no drift, non-zero = drift detected or error
           set +e
-          PYTHONPATH=$PYTHONPATH:$(pwd) poetry run alembic revision --autogenerate -m "$TEMP_MSG"
+          PYTHONPATH=$PYTHONPATH:$(pwd) poetry run alembic check 2>&1
           ALEMBIC_EXIT_CODE=$?
           set -e
           
-          # Check if alembic command failed (not due to "no changes" which exits 0)
           if [ $ALEMBIC_EXIT_CODE -ne 0 ]; then
             echo ""
             echo "============================================================"
-            echo "ERROR: Alembic autogenerate command failed (exit code: $ALEMBIC_EXIT_CODE)"
-            echo "============================================================"
-            echo "This could indicate database connection issues, configuration"
-            echo "problems, or import errors in your models."
-            exit $ALEMBIC_EXIT_CODE
-          fi
-          
-          # Check for uncommitted changes (new migration files)
-          if [ -n "$(git status --porcelain)" ]; then
-            echo ""
-            echo "============================================================"
-            echo "ERROR: Alembic autogenerate produced uncommitted changes."
+            echo "ERROR: Alembic detected schema drift."
             echo "============================================================"
             echo ""
             echo "This typically means you updated ORM models but did not commit"
@@ -128,29 +114,15 @@ jobs:
             echo "  2. Review the generated migration file carefully"
             echo "  3. Commit and push the new migration file"
             echo ""
-            echo "Files that would be created:"
-            git status --porcelain
-            echo ""
             echo "============================================================"
             echo "NOTE: This check runs against Postgres for higher fidelity."
             echo "Some Postgres-specific types or constraints may not be detected"
             echo "by SQLite-based checks."
             echo "============================================================"
-            
-            # Clean up generated files before exiting
-            echo "Cleaning up generated files..."
-            git restore --staged . || echo "Note: git restore --staged had no effect"
-            git checkout -- . || echo "Note: git checkout had no effect"
-            git clean -fd || echo "Note: git clean had no effect"
-            
             exit 1
           fi
           
           echo "✅ No schema drift detected. ORM models match existing migrations."
-          
-          # Cleanup any potential leftovers
-          git checkout -- . || true
-          git clean -fd || true
 
       # ----------------------------
       # 8️⃣  Dry-run Migration SQL (optional verification)
