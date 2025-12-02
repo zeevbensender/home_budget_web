@@ -52,18 +52,17 @@ jobs:
           DATABASE_URL: "sqlite:///./tmp_ci_db.sqlite"
         run: |
           set -e
-          TEMP_MSG="ci-autogen-sanity-$(date +%s)"
-          poetry run alembic revision --autogenerate -m "$TEMP_MSG" || true
-
-          if [ -n "$(git status --porcelain)" ]; then
-            echo "ERROR: Alembic autogenerate produced uncommitted changes."
+          # Apply migrations first
+          poetry run alembic upgrade head
+          
+          # Use alembic check to detect schema drift without creating files
+          # Exit code 0 = no drift, non-zero = drift detected or error
+          if ! poetry run alembic check; then
+            echo "ERROR: Alembic detected schema drift."
             echo "This typically means you updated ORM models but did not commit the corresponding migration(s)."
             echo "Run: cd backend && alembic revision --autogenerate -m \"<desc>\" and commit the new migration file."
-            git restore --staged . || true
-            git checkout -- . || true
-            git clean -fd || true
             exit 1
           fi
-
-          git checkout -- . || true
-          git clean -fd || true
+          
+          # Cleanup temporary database
+          rm -f tmp_ci_db.sqlite
