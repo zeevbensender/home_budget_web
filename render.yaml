@@ -5,13 +5,16 @@ services:
     dockerfilePath: backend/Dockerfile
     autoDeploy: true
     envVars:
-      # For logging behavior; not required but useful.
       - key: PYTHONUNBUFFERED
         value: "1"
-      # Render uses this to know which internal port your app exposes.
-      # Our uvicorn command in backend/Dockerfile listens on 8000.
       - key: PORT
         value: "8000"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: hbw-db
+          property: connectionString
+      - key: SECRET_KEY
+        sync: false
       # DATABASE_URL, SECRET_KEY, etc. should be added here or via the UI
       # but are not included now to keep this generic.
 
@@ -26,3 +29,7 @@ services:
 #    envVars:
 #      - key: REACT_APP_API_URL
 #        value: "https://hbw-backend.onrender.com/api"
+
+databases:
+  - name: hbw-db
+    plan: free
