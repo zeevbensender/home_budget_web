@@ -1,4 +1,4 @@
-"""add_test_column_to_expenses
+"""Add test column to expenses table for CI validation
 
 Revision ID: 0c27a824a398
 Revises: 2a3b4c5d6e7f
