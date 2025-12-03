@@ -516,6 +516,7 @@ pg_restore --dbname=$DATABASE_URL --table=<table_name> backup_<TIMESTAMP>.dump
 ## Related Documentation
 
 - [DB Migration Guidelines](../backend/db_migration_guidelines.md) - Engineering principles and PR template
+- [Alembic Conventions](../backend/alembic_conventions.md) - Naming, header templates, and commit messages
 - [DB Schema Guidelines](../backend/db_schema_guidelines.md) - Schema evolution rules
 - [Smoke Tests](smoke-tests.md) - Integration testing procedures
 - [Migration PR Template](../.github/PULL_REQUEST_TEMPLATE/migration_pr_template.md) - PR checklist for migrations
