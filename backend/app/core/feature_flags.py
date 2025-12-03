@@ -141,7 +141,7 @@ def is_feature_enabled(
 
     # 2. Check database if session is provided
     if db is not None:
-        db_result = get_flag_from_db(flag_name, db, user_id)
+        db_result = get_flag_from_db(flag_name, db, user_id=user_id)
         if db_result is not None:
             return db_result
 
