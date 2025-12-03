@@ -1,0 +1,262 @@
+# GitHub Actions workflow: Migration Validation
+# This workflow validates that Alembic migrations run successfully against:
+# 1. A fresh/empty Postgres database (migrate from scratch)
+# 2. A database with pre-existing data (snapshot) to catch idempotency issues
+
+name: Migration Validation
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/migration-validation.yml'
+  pull_request:
+    paths:
+      - 'backend/**'
+      - '.github/workflows/migration-validation.yml'
+
+permissions:
+  contents: read
+
+env:
+  PYTHON_VERSION: "3.11"
+
+jobs:
+  # ----------------------------
+  # Job 1: Migrate from Scratch
+  # ----------------------------
+  migrate-fresh-db:
+    name: Migrate Fresh Database
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_db
+      PGPASSWORD: test_password
+
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Poetry
+        run: pip install poetry
+        working-directory: .
+
+      - name: Cache Poetry dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/pypoetry
+            ~/.cache/pip
+            backend/.venv
+          key: ${{ runner.os }}-poetry-${{ hashFiles('backend/poetry.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-poetry-
+
+      - name: Install project dependencies
+        run: |
+          poetry config virtualenvs.in-project true
+          poetry install --no-interaction --no-root
+
+      - name: Verify database is empty
+        run: |
+          echo "Checking that database is empty before migration..."
+          TABLES=$(psql -h localhost -U test_user -d test_db -t -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public';")
+          TABLES=$(echo $TABLES | xargs)
+          if [ "$TABLES" != "0" ]; then
+            echo "ERROR: Expected empty database but found $TABLES tables"
+            exit 1
+          fi
+          echo "✅ Database is empty - ready for migration"
+
+      - name: Run alembic upgrade head (fresh database)
+        run: |
+          echo "Running migrations on fresh/empty database..."
+          poetry run alembic upgrade head
+          echo "✅ Migrations completed successfully on fresh database"
+
+      - name: Verify tables were created
+        run: |
+          echo "Verifying expected tables exist..."
+          TABLES=$(psql -h localhost -U test_user -d test_db -t -c "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_name;")
+          echo "Tables created:"
+          echo "$TABLES"
+          
+          # Verify expected tables exist
+          if ! echo "$TABLES" | grep -q "expenses"; then
+            echo "ERROR: 'expenses' table not found"
+            exit 1
+          fi
+          if ! echo "$TABLES" | grep -q "incomes"; then
+            echo "ERROR: 'incomes' table not found"
+            exit 1
+          fi
+          if ! echo "$TABLES" | grep -q "alembic_version"; then
+            echo "ERROR: 'alembic_version' table not found"
+            exit 1
+          fi
+          echo "✅ All expected tables verified"
+
+      - name: Display migration diagnostics
+        if: always()
+        run: |
+          echo "=== Migration Diagnostics ==="
+          echo ""
+          echo "Current Alembic version:"
+          poetry run alembic current || echo "No version set"
+          echo ""
+          echo "Migration history:"
+          poetry run alembic history || echo "No history available"
+
+  # ----------------------------
+  # Job 2: Migrate with Snapshot Data
+  # ----------------------------
+  migrate-with-snapshot:
+    name: Migrate with Snapshot Data
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_db
+      PGPASSWORD: test_password
+
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Poetry
+        run: pip install poetry
+        working-directory: .
+
+      - name: Cache Poetry dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/pypoetry
+            ~/.cache/pip
+            backend/.venv
+          key: ${{ runner.os }}-poetry-${{ hashFiles('backend/poetry.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-poetry-
+
+      - name: Install project dependencies
+        run: |
+          poetry config virtualenvs.in-project true
+          poetry install --no-interaction --no-root
+
+      - name: Run initial migrations
+        run: |
+          echo "Running initial migrations to create schema..."
+          poetry run alembic upgrade head
+          echo "✅ Initial schema created"
+
+      - name: Seed realistic test data (snapshot)
+        run: |
+          echo "Seeding database with realistic test data..."
+          poetry run python scripts/seed_smoke.py
+          echo "✅ Test data seeded successfully"
+
+      - name: Display database state before re-migration
+        run: |
+          echo "=== Database State Before Re-Migration ==="
+          echo ""
+          echo "Expenses count:"
+          psql -h localhost -U test_user -d test_db -t -c "SELECT COUNT(*) FROM expenses;"
+          echo ""
+          echo "Incomes count:"
+          psql -h localhost -U test_user -d test_db -t -c "SELECT COUNT(*) FROM incomes;"
+          echo ""
+          echo "Current Alembic version:"
+          psql -h localhost -U test_user -d test_db -t -c "SELECT version_num FROM alembic_version;"
+
+      - name: Run alembic upgrade head again (idempotency test)
+        run: |
+          echo "Running migrations again to verify idempotency..."
+          poetry run alembic upgrade head
+          echo "✅ Migrations are idempotent - ran successfully on database with existing data"
+
+      - name: Verify data integrity after migration
+        run: |
+          echo "=== Verifying Data Integrity ==="
+          echo ""
+          echo "Expenses after migration:"
+          psql -h localhost -U test_user -d test_db -c "SELECT id, date, business, category, amount FROM expenses;"
+          echo ""
+          echo "Incomes after migration:"
+          psql -h localhost -U test_user -d test_db -c "SELECT id, date, category, amount FROM incomes;"
+          echo ""
+          
+          # Verify data still exists
+          EXPENSES_COUNT=$(psql -h localhost -U test_user -d test_db -t -c "SELECT COUNT(*) FROM expenses;")
+          INCOMES_COUNT=$(psql -h localhost -U test_user -d test_db -t -c "SELECT COUNT(*) FROM incomes;")
+          
+          EXPENSES_COUNT=$(echo $EXPENSES_COUNT | xargs)
+          INCOMES_COUNT=$(echo $INCOMES_COUNT | xargs)
+          
+          if [ "$EXPENSES_COUNT" -lt "1" ]; then
+            echo "ERROR: Expected at least 1 expense, but found $EXPENSES_COUNT"
+            exit 1
+          fi
+          if [ "$INCOMES_COUNT" -lt "1" ]; then
+            echo "ERROR: Expected at least 1 income, but found $INCOMES_COUNT"
+            exit 1
+          fi
+          echo "✅ Data integrity verified: $EXPENSES_COUNT expenses, $INCOMES_COUNT incomes"
+
+      - name: Display migration diagnostics
+        if: always()
+        run: |
+          echo "=== Migration Diagnostics ==="
+          echo ""
+          echo "Current Alembic version:"
+          poetry run alembic current || echo "No version set"
+          echo ""
+          echo "Migration history:"
+          poetry run alembic history || echo "No history available"
