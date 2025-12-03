@@ -192,12 +192,14 @@ Start simple:
 ---
 
 ## 15. Alembic Naming & Conventions
-- Migration revision message: concise slug e.g., `add_category_id_to_expenses`.
-- File naming: rely on Alembic revision id + message: `20251130_1234_add_category_id_to_expenses.py` (human-friendly prefix optional).
-- Migration header should include:
-  - Short description
-  - Author and date (comment)
-  - Estimated runtime note (if long)
+
+> **📖 Full conventions guide:** See [alembic_conventions.md](alembic_conventions.md) for detailed naming rules, header templates, and commit message examples.
+
+**Quick summary:**
+- Migration revision message: concise slug e.g., `add_category_id_to_expenses`
+- File naming: Alembic revision id + message: `abc123_add_category_id_to_expenses.py`
+- Migration header should include: Author, Date, Purpose, and Estimated runtime
+- Commit message format: `db: <action> <target>`
 
 ---
 
@@ -262,11 +264,21 @@ Approval:
 ---
 
 ## 18. Appendix: Example Alembic Header (add to top of revision)
-```
+
+> **📖 See [alembic_conventions.md](alembic_conventions.md) for complete header template and commit message examples.**
+
+```python
+"""add_category_id_to_expenses
+
+Revision ID: abc123def456
+Revises: 789ghi012jkl
+Create Date: 2025-12-03 10:30:00.000000
+
 # Author: zeevbensender
-# Date: 2025-11-30
-# Estimated runtime: ~X seconds (note if long)
-# Purpose: add category_id column to expenses (backwards compatible, phase 1)
+# Date: 2025-12-03
+# Purpose: Add category_id column to expenses (backwards compatible, phase 1)
+# Estimated runtime: < 1 second
+"""
 ```
 
 ---
