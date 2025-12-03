@@ -47,6 +47,11 @@ jobs:
 
     env:
       DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_db
+      PGPASSWORD: test_password
+
+    defaults:
+      run:
+        working-directory: backend
 
     steps:
       - name: Checkout code
@@ -59,6 +64,7 @@ jobs:
 
       - name: Install Poetry
         run: pip install poetry
+        working-directory: .
 
       - name: Cache Poetry dependencies
         uses: actions/cache@v4
@@ -72,7 +78,6 @@ jobs:
             ${{ runner.os }}-poetry-
 
       - name: Install project dependencies
-        working-directory: backend
         run: |
           poetry config virtualenvs.in-project true
           poetry install --no-interaction --no-root
@@ -80,7 +85,7 @@ jobs:
       - name: Verify database is empty
         run: |
           echo "Checking that database is empty before migration..."
-          TABLES=$(PGPASSWORD=test_password psql -h localhost -U test_user -d test_db -t -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public';")
+          TABLES=$(psql -h localhost -U test_user -d test_db -t -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public';")
           TABLES=$(echo $TABLES | xargs)
           if [ "$TABLES" != "0" ]; then
             echo "ERROR: Expected empty database but found $TABLES tables"
@@ -89,16 +94,15 @@ jobs:
           echo "✅ Database is empty - ready for migration"
 
       - name: Run alembic upgrade head (fresh database)
-        working-directory: backend
         run: |
           echo "Running migrations on fresh/empty database..."
-          PYTHONPATH=$PYTHONPATH:$(pwd) poetry run alembic upgrade head
+          poetry run alembic upgrade head
           echo "✅ Migrations completed successfully on fresh database"
 
       - name: Verify tables were created
         run: |
           echo "Verifying expected tables exist..."
-          TABLES=$(PGPASSWORD=test_password psql -h localhost -U test_user -d test_db -t -c "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_name;")
+          TABLES=$(psql -h localhost -U test_user -d test_db -t -c "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_name;")
           echo "Tables created:"
           echo "$TABLES"
           
@@ -119,15 +123,14 @@ jobs:
 
       - name: Display migration diagnostics
         if: always()
-        working-directory: backend
         run: |
           echo "=== Migration Diagnostics ==="
           echo ""
           echo "Current Alembic version:"
-          PYTHONPATH=$PYTHONPATH:$(pwd) poetry run alembic current || echo "No version set"
+          poetry run alembic current || echo "No version set"
           echo ""
           echo "Migration history:"
-          PYTHONPATH=$PYTHONPATH:$(pwd) poetry run alembic history || echo "No history available"
+          poetry run alembic history || echo "No history available"
 
   # ----------------------------
   # Job 2: Migrate with Snapshot Data
@@ -153,6 +156,11 @@ jobs:
 
     env:
       DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_db
+      PGPASSWORD: test_password
+
+    defaults:
+      run:
+        working-directory: backend
 
     steps:
       - name: Checkout code
@@ -165,6 +173,7 @@ jobs:
 
       - name: Install Poetry
         run: pip install poetry
+        working-directory: .
 
       - name: Cache Poetry dependencies
         uses: actions/cache@v4
@@ -178,23 +187,20 @@ jobs:
             ${{ runner.os }}-poetry-
 
       - name: Install project dependencies
-        working-directory: backend
         run: |
           poetry config virtualenvs.in-project true
           poetry install --no-interaction --no-root
 
       - name: Run initial migrations
-        working-directory: backend
         run: |
           echo "Running initial migrations to create schema..."
-          PYTHONPATH=$PYTHONPATH:$(pwd) poetry run alembic upgrade head
+          poetry run alembic upgrade head
           echo "✅ Initial schema created"
 
       - name: Seed realistic test data (snapshot)
-        working-directory: backend
         run: |
           echo "Seeding database with realistic test data..."
-          PYTHONPATH=$PYTHONPATH:$(pwd) poetry run python scripts/seed_smoke.py
+          poetry run python scripts/seed_smoke.py
           echo "✅ Test data seeded successfully"
 
       - name: Display database state before re-migration
@@ -202,19 +208,18 @@ jobs:
           echo "=== Database State Before Re-Migration ==="
           echo ""
           echo "Expenses count:"
-          PGPASSWORD=test_password psql -h localhost -U test_user -d test_db -t -c "SELECT COUNT(*) FROM expenses;"
+          psql -h localhost -U test_user -d test_db -t -c "SELECT COUNT(*) FROM expenses;"
           echo ""
           echo "Incomes count:"
-          PGPASSWORD=test_password psql -h localhost -U test_user -d test_db -t -c "SELECT COUNT(*) FROM incomes;"
+          psql -h localhost -U test_user -d test_db -t -c "SELECT COUNT(*) FROM incomes;"
           echo ""
           echo "Current Alembic version:"
-          PGPASSWORD=test_password psql -h localhost -U test_user -d test_db -t -c "SELECT version_num FROM alembic_version;"
+          psql -h localhost -U test_user -d test_db -t -c "SELECT version_num FROM alembic_version;"
 
       - name: Run alembic upgrade head again (idempotency test)
-        working-directory: backend
         run: |
           echo "Running migrations again to verify idempotency..."
-          PYTHONPATH=$PYTHONPATH:$(pwd) poetry run alembic upgrade head
+          poetry run alembic upgrade head
           echo "✅ Migrations are idempotent - ran successfully on database with existing data"
 
       - name: Verify data integrity after migration
@@ -222,15 +227,15 @@ jobs:
           echo "=== Verifying Data Integrity ==="
           echo ""
           echo "Expenses after migration:"
-          PGPASSWORD=test_password psql -h localhost -U test_user -d test_db -c "SELECT id, date, business, category, amount FROM expenses;"
+          psql -h localhost -U test_user -d test_db -c "SELECT id, date, business, category, amount FROM expenses;"
           echo ""
           echo "Incomes after migration:"
-          PGPASSWORD=test_password psql -h localhost -U test_user -d test_db -c "SELECT id, date, category, amount FROM incomes;"
+          psql -h localhost -U test_user -d test_db -c "SELECT id, date, category, amount FROM incomes;"
           echo ""
           
           # Verify data still exists
-          EXPENSES_COUNT=$(PGPASSWORD=test_password psql -h localhost -U test_user -d test_db -t -c "SELECT COUNT(*) FROM expenses;")
-          INCOMES_COUNT=$(PGPASSWORD=test_password psql -h localhost -U test_user -d test_db -t -c "SELECT COUNT(*) FROM incomes;")
+          EXPENSES_COUNT=$(psql -h localhost -U test_user -d test_db -t -c "SELECT COUNT(*) FROM expenses;")
+          INCOMES_COUNT=$(psql -h localhost -U test_user -d test_db -t -c "SELECT COUNT(*) FROM incomes;")
           
           EXPENSES_COUNT=$(echo $EXPENSES_COUNT | xargs)
           INCOMES_COUNT=$(echo $INCOMES_COUNT | xargs)
@@ -247,12 +252,11 @@ jobs:
 
       - name: Display migration diagnostics
         if: always()
-        working-directory: backend
         run: |
           echo "=== Migration Diagnostics ==="
           echo ""
           echo "Current Alembic version:"
-          PYTHONPATH=$PYTHONPATH:$(pwd) poetry run alembic current || echo "No version set"
+          poetry run alembic current || echo "No version set"
           echo ""
           echo "Migration history:"
-          PYTHONPATH=$PYTHONPATH:$(pwd) poetry run alembic history || echo "No history available"
+          poetry run alembic history || echo "No history available"
