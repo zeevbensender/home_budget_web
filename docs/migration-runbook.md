@@ -180,8 +180,16 @@ poetry run alembic upgrade head 2>&1 | tee migration_$(date +%Y%m%d_%H%M%S).log
 In a separate terminal, monitor active queries during migration:
 
 ```bash
-# Watch for long-running queries
-watch -n 5 'psql $DATABASE_URL -c "SELECT pid, now() - query_start AS duration, state, query FROM pg_stat_activity WHERE state != '\''idle'\'' ORDER BY query_start;"'
+# Watch for long-running queries (run this command in psql or use the following)
+psql $DATABASE_URL -c "
+SELECT pid, now() - query_start AS duration, state, query 
+FROM pg_stat_activity 
+WHERE state != 'idle' 
+ORDER BY query_start;"
+
+# Or use watch to refresh every 5 seconds (requires separate monitoring script)
+# Create a monitoring script: /tmp/monitor_queries.sh
+# Then run: watch -n 5 /tmp/monitor_queries.sh
 ```
 
 ### 4.2 Lock Monitoring
@@ -228,19 +236,21 @@ See [grafana-prometheus-integration.md](grafana-prometheus-integration.md) for s
 
 ### 5.1 Schema Validation Queries
 
-```sql
--- Verify migration was applied
-SELECT * FROM alembic_version;
+```bash
+# Verify migration was applied
+psql $DATABASE_URL -c "SELECT * FROM alembic_version;"
 
--- Check table structure (replace 'expenses' with your table)
-\d expenses
+# Check table structure (replace 'expenses' with your table)
+# Run this inside a psql session:
+psql $DATABASE_URL -c "\d expenses"
 
--- Count records in affected tables
+# Count records in affected tables
+psql $DATABASE_URL -c "
 SELECT 
   'expenses' AS table_name, COUNT(*) AS row_count FROM expenses
 UNION ALL
 SELECT 
-  'incomes' AS table_name, COUNT(*) AS row_count FROM incomes;
+  'incomes' AS table_name, COUNT(*) AS row_count FROM incomes;"
 ```
 
 ### 5.2 Data Integrity Checks
@@ -373,8 +383,12 @@ pg_restore \
 # Stop containers
 docker-compose -f docker-compose-postgres.yaml down
 
+# List volumes to identify the correct volume name
+docker volume ls | grep postgres
+
 # Remove volume (destroys current data)
-docker volume rm home_budget_web_postgres_data
+# Note: Volume name format is typically <project_name>_<volume_name>
+docker-compose -f docker-compose-postgres.yaml down -v
 
 # Restart containers
 docker-compose -f docker-compose-postgres.yaml up -d
@@ -382,9 +396,9 @@ docker-compose -f docker-compose-postgres.yaml up -d
 # Wait for Postgres to be ready
 docker-compose -f docker-compose-postgres.yaml exec db pg_isready -U poc_user -d poc_db
 
-# Restore from backup
-cat backup_<TIMESTAMP>.dump | docker-compose -f docker-compose-postgres.yaml exec -T db \
-  pg_restore -U poc_user -d poc_db
+# Copy backup file into container and restore
+docker cp backup_<TIMESTAMP>.dump $(docker-compose -f docker-compose-postgres.yaml ps -q db):/tmp/backup.dump
+docker-compose -f docker-compose-postgres.yaml exec db pg_restore -U poc_user -d poc_db /tmp/backup.dump
 
 # Re-run migrations to desired state
 cd backend && poetry run alembic upgrade <target_revision>
