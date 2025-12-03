@@ -22,6 +22,7 @@ class Expense(Base):
     account: Mapped[str] = mapped_column(String(100), nullable=False)
     currency: Mapped[str] = mapped_column(String(10), nullable=False, default="₪")
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    test_column: Mapped[str | None] = mapped_column(String(50), nullable=True)
 
     def __repr__(self) -> str:
         return f"<Expense(id={self.id}, date={self.date}, amount={self.amount})>"

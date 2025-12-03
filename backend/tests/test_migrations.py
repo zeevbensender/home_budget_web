@@ -59,6 +59,7 @@ class TestMigrationSchema:
             "account",
             "currency",
             "notes",
+            "test_column",
         }
         assert expected_columns == columns
 
