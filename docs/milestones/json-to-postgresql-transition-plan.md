@@ -4,7 +4,7 @@
 **Backend:** FastAPI + SQLAlchemy 2.0 + Alembic + PostgreSQL  
 **Owner:** @zeevbensender  
 **Status:** Planning  
-**Created:** 2025-12-07  
+**Created:** 2024-12-07  
 **Target Completion:** TBD
 
 ---
@@ -445,7 +445,7 @@ envVars:
 **Recommended Tools (Low Cost/Free):**
 
 1. **Sentry** (Error Tracking)
-   - Free tier: 5,000 errors/month
+   - Free tier available (verify current limits at sentry.io/pricing)
    - Python/FastAPI integration
    - Real-time alerts
 
@@ -1019,7 +1019,7 @@ POOL_SIZE = 5  # Default in .env.example
 - **Staging:** 10 connections
 - **Production:** Start with 20, monitor and adjust
 
-**Rationale:** Render free tier PostgreSQL has connection limits (typically 20-50). Start conservative, scale based on metrics.
+**Rationale:** PostgreSQL hosting platforms typically have connection limits on free/starter tiers (verify current limits in platform documentation). Start conservative, scale based on metrics.
 
 ---
 
@@ -1487,7 +1487,7 @@ export FF_DUAL_WRITE_ENABLED=false
 ---
 
 **Document Version:** 1.0  
-**Last Updated:** 2025-12-07  
+**Last Updated:** 2024-12-07  
 **Owner:** @zeevbensender  
 **Status:** Ready for Review
 
