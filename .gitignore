@@ -3,3 +3,6 @@ vnv-web-budget
 __pycache__/
 .env
 backend/app/data/*.json
+.coverage
+.pytest_cache/
+*.pyc
