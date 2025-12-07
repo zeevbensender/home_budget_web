@@ -8,7 +8,7 @@ Phase 4: Switches to reading from PostgreSQL
 """
 
 import logging
-from datetime import date, datetime
+from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
