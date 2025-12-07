@@ -34,7 +34,7 @@ This document outlines the complete transition plan from the current JSON file-b
 7. [Testing Strategy](#testing-strategy)
 8. [Rollout Plan](#rollout-plan)
 9. [Rollback Strategy](#rollback-strategy)
-10. [Open Questions & Recommendations](#open-questions--recommendations)
+10. [Implementation Decisions](#implementation-decisions)
 11. [Success Criteria](#success-criteria)
 12. [Timeline & Dependencies](#timeline--dependencies)
 
@@ -980,18 +980,15 @@ tar -czf json_backup_$(date +%Y%m%d).tar.gz app/data/*.json
 
 ---
 
-## 10. Open Questions & Recommendations
+## 10. Implementation Decisions
 
-### 10.1 Questions Requiring Input
+### 10.1 Key Decisions
 
-**Q1: Data Migration from JSON to Database**
+**Decision 1: Data Migration from JSON to Database**
 
-**Question:** The issue states "no need for data migration plan" since the project is in PoC stage. Should we:
-- A) Start with empty database (users re-enter data)
-- B) Provide optional migration script (one-time import of JSON to DB)
-- C) Keep dual-read mode (fallback to JSON for historical data)
+**Decision:** Provide optional migration script (one-time import of JSON to DB)
 
-**Recommendation:** **Option B** - Provide optional migration script. Even for PoC, preserving existing test data is valuable for:
+**Rationale:** Even for PoC, preserving existing test data is valuable for:
 - Continuity during development
 - Testing with realistic data
 - Demo purposes
@@ -1004,9 +1001,12 @@ python scripts/migrate_json_to_db.py --source app/data/expenses.json --table exp
 
 ---
 
-**Q2: Connection Pool Size & Concurrency**
+**Decision 2: Connection Pool Size & Concurrency**
 
-**Question:** What are the expected concurrent users and request volumes?
+**Decision:** Connection pool sizing by environment:
+- **Development:** 5 connections (current)
+- **Staging:** 10 connections
+- **Production:** 20 connections (start conservative, monitor and adjust)
 
 **Current Configuration:**
 ```python
@@ -1014,20 +1014,13 @@ python scripts/migrate_json_to_db.py --source app/data/expenses.json --table exp
 POOL_SIZE = 5  # Default in .env.example
 ```
 
-**Recommendation:**
-- **Development:** 5 connections (current)
-- **Staging:** 10 connections
-- **Production:** Start with 20, monitor and adjust
-
 **Rationale:** PostgreSQL hosting platforms typically have connection limits on free/starter tiers (verify current limits in platform documentation). Start conservative, scale based on metrics.
 
 ---
 
-**Q3: Backup & Disaster Recovery**
+**Decision 3: Backup & Disaster Recovery**
 
-**Question:** What is acceptable data loss window (RPO) and recovery time (RTO)?
-
-**Recommendation:**
+**Decision:** 
 - **RPO (Recovery Point Objective):** 24 hours (daily backups)
 - **RTO (Recovery Time Objective):** 1 hour (time to restore from backup)
 
@@ -1038,30 +1031,27 @@ POOL_SIZE = 5  # Default in .env.example
 
 ---
 
-**Q4: Multi-User Support & Authentication**
+**Decision 4: Multi-User Support & Authentication**
 
-**Question:** Is user authentication required in this milestone?
-
-**Recommendation:** **No** - Keep single-tenant for this milestone. Add user authentication in a future milestone.
+**Decision:** **Deferred to next milestone** after database is fully migrated. Keep single-tenant for this milestone.
 
 **Rationale:**
 - Reduces scope and complexity
 - Focus on storage layer transition
 - Authentication is independent concern
+- Will be addressed once database migration is stable
 
 **Future Implementation:**
 ```sql
--- Future: Add user_id to expenses/incomes
+-- Next milestone: Add user_id to expenses/incomes
 ALTER TABLE expenses ADD COLUMN user_id INTEGER REFERENCES users(id);
 ```
 
 ---
 
-**Q5: Index Strategy**
+**Decision 5: Index Strategy**
 
-**Question:** Which queries should be optimized with indexes?
-
-**Recommendation:** Start with these indexes:
+**Decision:** Implement performance indexes for common query patterns:
 
 ```sql
 -- Expenses
@@ -1089,11 +1079,9 @@ def upgrade():
 
 ---
 
-**Q6: Error Handling & Logging**
+**Decision 6: Error Handling & Logging**
 
-**Question:** What level of error logging and monitoring is needed?
-
-**Recommendation:**
+**Decision:** Implement comprehensive logging and monitoring strategy:
 
 1. **Structured Logging:**
 ```python
@@ -1126,11 +1114,9 @@ sentry_sdk.init(
 
 ---
 
-**Q7: Testing Data Seeding**
+**Decision 7: Testing Data Seeding**
 
-**Question:** How should test data be seeded in different environments?
-
-**Recommendation:**
+**Decision:** Environment-specific seeding strategy:
 
 **Development:**
 ```bash
@@ -1151,11 +1137,9 @@ python scripts/seed_test_data.py --count=1000
 
 ---
 
-**Q8: Database Naming Conventions**
+**Decision 8: Database Naming Conventions**
 
-**Question:** Should table/column names follow snake_case or camelCase?
-
-**Recommendation:** **snake_case** (already implemented)
+**Decision:** Use **snake_case** for all table and column names (already implemented)
 
 **Rationale:**
 - Standard PostgreSQL convention
@@ -1164,11 +1148,9 @@ python scripts/seed_test_data.py --count=1000
 
 ---
 
-**Q9: API Response Format Changes**
+**Decision 9: API Response Format Changes**
 
-**Question:** Should API response format change when switching from JSON to DB?
-
-**Recommendation:** **No** - Keep API contract identical
+**Decision:** **No changes** - Keep API contract identical
 
 **Implementation:**
 ```python
@@ -1193,11 +1175,9 @@ def expense_to_dict(expense: Expense) -> dict:
 
 ---
 
-**Q10: Feature Flag Management**
+**Decision 10: Feature Flag Management**
 
-**Question:** Should feature flags be stored in environment variables or database?
-
-**Recommendation:** **Hybrid approach** (already implemented)
+**Decision:** Use **hybrid approach** (already implemented)
 
 **Strategy:**
 1. **Global flags:** Environment variables (deployment-level control)
