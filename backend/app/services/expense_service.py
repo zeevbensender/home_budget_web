@@ -7,7 +7,8 @@ Phase 3: Adds dual-write to PostgreSQL
 Phase 4: Switches to reading from PostgreSQL
 """
 
-from datetime import date
+import logging
+from datetime import date, datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
@@ -17,6 +18,8 @@ from app.core.feature_flags import is_feature_enabled
 from app.core.settings import get_default_currency
 from app.core.storage import load_json, save_json
 from app.repositories.expense_repository import ExpenseRepository
+
+logger = logging.getLogger(__name__)
 
 
 class ExpenseService:
@@ -51,6 +54,106 @@ class ExpenseService:
             expenses: List of expense dictionaries to save
         """
         save_json("expenses.json", expenses)
+    
+    def _convert_to_db_format(self, expense: Dict[str, Any]) -> Dict[str, Any]:
+        """Convert expense dict to database format.
+        
+        Args:
+            expense: Expense dictionary
+        
+        Returns:
+            Dictionary formatted for database
+        """
+        db_data = expense.copy()
+        
+        # Convert date string to date object if needed
+        if isinstance(db_data.get("date"), str):
+            db_data["date"] = datetime.strptime(db_data["date"], "%Y-%m-%d").date()
+        
+        # Convert amount to Decimal if needed
+        if isinstance(db_data.get("amount"), (int, float)):
+            db_data["amount"] = Decimal(str(db_data["amount"]))
+        
+        return db_data
+    
+    def _dual_write_create(self, expense: Dict[str, Any]) -> None:
+        """Write expense to database in dual-write mode.
+        
+        Args:
+            expense: Expense dictionary to write
+        """
+        if not is_feature_enabled("DUAL_WRITE_ENABLED"):
+            return
+        
+        if not self.repository:
+            logger.warning("Dual-write enabled but no database session available")
+            return
+        
+        try:
+            db_data = self._convert_to_db_format(expense)
+            self.repository.create(db_data)
+            logger.info(f"Dual-write: Created expense {expense['id']} in database")
+        except Exception as e:
+            logger.warning(f"Dual-write failed for expense {expense['id']}: {e}")
+    
+    def _dual_write_update(self, expense_id: int, data: Dict[str, Any]) -> None:
+        """Update expense in database in dual-write mode.
+        
+        Args:
+            expense_id: Expense ID
+            data: Updated fields
+        """
+        if not is_feature_enabled("DUAL_WRITE_ENABLED"):
+            return
+        
+        if not self.repository:
+            logger.warning("Dual-write enabled but no database session available")
+            return
+        
+        try:
+            db_data = self._convert_to_db_format(data)
+            self.repository.update(expense_id, db_data)
+            logger.info(f"Dual-write: Updated expense {expense_id} in database")
+        except Exception as e:
+            logger.warning(f"Dual-write failed for expense {expense_id}: {e}")
+    
+    def _dual_write_delete(self, expense_id: int) -> None:
+        """Delete expense from database in dual-write mode.
+        
+        Args:
+            expense_id: Expense ID to delete
+        """
+        if not is_feature_enabled("DUAL_WRITE_ENABLED"):
+            return
+        
+        if not self.repository:
+            logger.warning("Dual-write enabled but no database session available")
+            return
+        
+        try:
+            self.repository.delete(expense_id)
+            logger.info(f"Dual-write: Deleted expense {expense_id} from database")
+        except Exception as e:
+            logger.warning(f"Dual-write failed for expense {expense_id}: {e}")
+    
+    def _dual_write_bulk_delete(self, ids: List[int]) -> None:
+        """Bulk delete expenses from database in dual-write mode.
+        
+        Args:
+            ids: List of expense IDs to delete
+        """
+        if not is_feature_enabled("DUAL_WRITE_ENABLED"):
+            return
+        
+        if not self.repository:
+            logger.warning("Dual-write enabled but no database session available")
+            return
+        
+        try:
+            deleted = self.repository.bulk_delete(ids)
+            logger.info(f"Dual-write: Bulk deleted {deleted} expenses from database")
+        except Exception as e:
+            logger.warning(f"Dual-write bulk delete failed: {e}")
     
     def list_expenses(self) -> List[Dict[str, Any]]:
         """Get all expenses.
@@ -97,8 +200,11 @@ class ExpenseService:
         expense = {**data, "id": new_id}
         expenses.append(expense)
         
-        # Save to JSON
+        # Save to JSON (primary storage)
         self._save_expenses(expenses)
+        
+        # Dual-write to database if enabled
+        self._dual_write_create(expense)
         
         return expense
     
@@ -132,7 +238,12 @@ class ExpenseService:
                 else:
                     expense[field] = value
                 
+                # Save to JSON (primary storage)
                 self._save_expenses(expenses)
+                
+                # Dual-write to database if enabled
+                self._dual_write_update(expense_id, {field: expense[field]})
+                
                 return expense
         
         return None
@@ -152,7 +263,12 @@ class ExpenseService:
         expenses = [e for e in expenses if e["id"] != expense_id]
         
         if len(expenses) < initial_count:
+            # Save to JSON (primary storage)
             self._save_expenses(expenses)
+            
+            # Dual-write to database if enabled
+            self._dual_write_delete(expense_id)
+            
             return True
         
         return False
@@ -173,7 +289,11 @@ class ExpenseService:
         deleted_count = initial_count - len(expenses)
         
         if deleted_count > 0:
+            # Save to JSON (primary storage)
             self._save_expenses(expenses)
+            
+            # Dual-write to database if enabled
+            self._dual_write_bulk_delete(ids)
         
         return deleted_count
 
