@@ -76,12 +76,52 @@ class IncomeService:
         
         return db_data
     
+    def _convert_from_db_format(self, income) -> Dict[str, Any]:
+        """Convert SQLAlchemy model instance to dictionary format.
+        
+        Args:
+            income: SQLAlchemy Income model instance
+        
+        Returns:
+            Dictionary with date as string and amount as float
+        """
+        from app.models.income import Income
+        
+        # Handle both model instances and dictionaries
+        if isinstance(income, Income):
+            return {
+                "id": income.id,
+                "date": income.date.strftime("%Y-%m-%d"),
+                "category": income.category,
+                "amount": float(income.amount),
+                "account": income.account,
+                "currency": income.currency,
+                "notes": income.notes,
+            }
+        return income
+    
     def _dual_write_create(self, income: Dict[str, Any]) -> None:
-        """Write income to database in dual-write mode.
+        """Write income to secondary storage in dual-write mode.
+        
+        In Phase 4 with USE_DATABASE_STORAGE=true, this writes to JSON.
+        In Phase 3 with DUAL_WRITE_ENABLED=true, this writes to DB.
         
         Args:
             income: Income dictionary to write
         """
+        # Phase 4: When reading from DB, dual-write to JSON
+        if is_feature_enabled("USE_DATABASE_STORAGE"):
+            if is_feature_enabled("DUAL_WRITE_ENABLED"):
+                try:
+                    incomes = self._load_incomes()
+                    incomes.append(income)
+                    self._save_incomes(incomes)
+                    logger.info(f"Dual-write: Created income {income['id']} in JSON")
+                except Exception as e:
+                    logger.warning(f"Dual-write to JSON failed for income {income['id']}: {e}")
+            return
+        
+        # Phase 3: When reading from JSON, dual-write to DB
         if not is_feature_enabled("DUAL_WRITE_ENABLED"):
             return
         
@@ -97,12 +137,31 @@ class IncomeService:
             logger.warning(f"Dual-write failed for income {income['id']}: {e}")
     
     def _dual_write_update(self, income_id: int, data: Dict[str, Any]) -> None:
-        """Update income in database in dual-write mode.
+        """Update income in secondary storage in dual-write mode.
+        
+        In Phase 4 with USE_DATABASE_STORAGE=true, this updates JSON.
+        In Phase 3 with DUAL_WRITE_ENABLED=true, this updates DB.
         
         Args:
             income_id: Income ID
             data: Updated fields
         """
+        # Phase 4: When reading from DB, dual-write to JSON
+        if is_feature_enabled("USE_DATABASE_STORAGE"):
+            if is_feature_enabled("DUAL_WRITE_ENABLED"):
+                try:
+                    incomes = self._load_incomes()
+                    for income in incomes:
+                        if income["id"] == income_id:
+                            income.update(data)
+                            break
+                    self._save_incomes(incomes)
+                    logger.info(f"Dual-write: Updated income {income_id} in JSON")
+                except Exception as e:
+                    logger.warning(f"Dual-write to JSON failed for income {income_id}: {e}")
+            return
+        
+        # Phase 3: When reading from JSON, dual-write to DB
         if not is_feature_enabled("DUAL_WRITE_ENABLED"):
             return
         
@@ -118,11 +177,27 @@ class IncomeService:
             logger.warning(f"Dual-write failed for income {income_id}: {e}")
     
     def _dual_write_delete(self, income_id: int) -> None:
-        """Delete income from database in dual-write mode.
+        """Delete income from secondary storage in dual-write mode.
+        
+        In Phase 4 with USE_DATABASE_STORAGE=true, this deletes from JSON.
+        In Phase 3 with DUAL_WRITE_ENABLED=true, this deletes from DB.
         
         Args:
             income_id: Income ID to delete
         """
+        # Phase 4: When reading from DB, dual-write to JSON
+        if is_feature_enabled("USE_DATABASE_STORAGE"):
+            if is_feature_enabled("DUAL_WRITE_ENABLED"):
+                try:
+                    incomes = self._load_incomes()
+                    incomes = [i for i in incomes if i["id"] != income_id]
+                    self._save_incomes(incomes)
+                    logger.info(f"Dual-write: Deleted income {income_id} from JSON")
+                except Exception as e:
+                    logger.warning(f"Dual-write to JSON failed for income {income_id}: {e}")
+            return
+        
+        # Phase 3: When reading from JSON, dual-write to DB
         if not is_feature_enabled("DUAL_WRITE_ENABLED"):
             return
         
@@ -137,11 +212,27 @@ class IncomeService:
             logger.warning(f"Dual-write failed for income {income_id}: {e}")
     
     def _dual_write_bulk_delete(self, ids: List[int]) -> None:
-        """Bulk delete incomes from database in dual-write mode.
+        """Bulk delete incomes from secondary storage in dual-write mode.
+        
+        In Phase 4 with USE_DATABASE_STORAGE=true, this deletes from JSON.
+        In Phase 3 with DUAL_WRITE_ENABLED=true, this deletes from DB.
         
         Args:
             ids: List of income IDs to delete
         """
+        # Phase 4: When reading from DB, dual-write to JSON
+        if is_feature_enabled("USE_DATABASE_STORAGE"):
+            if is_feature_enabled("DUAL_WRITE_ENABLED"):
+                try:
+                    incomes = self._load_incomes()
+                    incomes = [i for i in incomes if i["id"] not in ids]
+                    self._save_incomes(incomes)
+                    logger.info(f"Dual-write: Bulk deleted {len(ids)} incomes from JSON")
+                except Exception as e:
+                    logger.warning(f"Dual-write bulk delete to JSON failed: {e}")
+            return
+        
+        # Phase 3: When reading from JSON, dual-write to DB
         if not is_feature_enabled("DUAL_WRITE_ENABLED"):
             return
         
@@ -161,6 +252,12 @@ class IncomeService:
         Returns:
             List of income dictionaries
         """
+        # Phase 4: Read from database if feature flag is enabled
+        if is_feature_enabled("USE_DATABASE_STORAGE") and self.repository:
+            incomes = self.repository.list(order_by="-date")
+            return [self._convert_from_db_format(i) for i in incomes]
+        
+        # Fallback to JSON storage
         return self._load_incomes()
     
     def get_income(self, income_id: int) -> Optional[Dict[str, Any]]:
@@ -172,6 +269,12 @@ class IncomeService:
         Returns:
             Income dictionary if found, None otherwise
         """
+        # Phase 4: Read from database if feature flag is enabled
+        if is_feature_enabled("USE_DATABASE_STORAGE") and self.repository:
+            income = self.repository.get(income_id)
+            return self._convert_from_db_format(income) if income else None
+        
+        # Fallback to JSON storage
         incomes = self._load_incomes()
         for income in incomes:
             if income.get("id") == income_id:
@@ -187,14 +290,27 @@ class IncomeService:
         Returns:
             Created income with assigned ID
         """
+        # Auto-fill currency if missing
+        if not data.get("currency"):
+            data["currency"] = get_default_currency()
+        
+        # Phase 4: Write to database if feature flag is enabled
+        if is_feature_enabled("USE_DATABASE_STORAGE") and self.repository:
+            # Write to PostgreSQL (primary storage)
+            db_data = self._convert_to_db_format(data)
+            created = self.repository.create(db_data)
+            income = self._convert_from_db_format(created)
+            
+            # Dual-write to JSON if enabled (for rollback safety)
+            self._dual_write_create(income)
+            
+            return income
+        
+        # Phase 3: Write to JSON (primary storage)
         incomes = self._load_incomes()
         
         # Generate new ID
         new_id = max([i["id"] for i in incomes], default=0) + 1
-        
-        # Auto-fill currency if missing
-        if not data.get("currency"):
-            data["currency"] = get_default_currency()
         
         # Create income record
         income = {**data, "id": new_id}
@@ -224,6 +340,32 @@ class IncomeService:
         Returns:
             Updated income if found, None otherwise
         """
+        # Phase 4: Update in database if feature flag is enabled
+        if is_feature_enabled("USE_DATABASE_STORAGE") and self.repository:
+            # Get existing income from database
+            existing = self.repository.get(income_id)
+            if not existing:
+                return None
+            
+            # Handle currency special case
+            if field == "currency" and value is None:
+                value = get_default_currency()
+            
+            # Update in PostgreSQL (primary storage)
+            update_data = {field: value}
+            db_data = self._convert_to_db_format(update_data)
+            updated = self.repository.update(income_id, db_data)
+            if not updated:
+                return None
+            
+            income = self._convert_from_db_format(updated)
+            
+            # Dual-write to JSON if enabled (for rollback safety)
+            self._dual_write_update(income_id, {field: income[field]})
+            
+            return income
+        
+        # Phase 3: Update in JSON (primary storage)
         incomes = self._load_incomes()
         
         for income in incomes:
@@ -257,6 +399,24 @@ class IncomeService:
         Returns:
             True if deleted, False if not found
         """
+        # Phase 4: Delete from database if feature flag is enabled
+        if is_feature_enabled("USE_DATABASE_STORAGE") and self.repository:
+            # Check if exists first
+            existing = self.repository.get(income_id)
+            if not existing:
+                return False
+            
+            # Delete from PostgreSQL (primary storage)
+            deleted = self.repository.delete(income_id)
+            
+            if deleted:
+                # Dual-write to JSON if enabled (for rollback safety)
+                self._dual_write_delete(income_id)
+                return True
+            
+            return False
+        
+        # Phase 3: Delete from JSON (primary storage)
         incomes = self._load_incomes()
         initial_count = len(incomes)
         
@@ -282,6 +442,18 @@ class IncomeService:
         Returns:
             Number of incomes actually deleted
         """
+        # Phase 4: Delete from database if feature flag is enabled
+        if is_feature_enabled("USE_DATABASE_STORAGE") and self.repository:
+            # Delete from PostgreSQL (primary storage)
+            deleted_count = self.repository.bulk_delete(ids)
+            
+            if deleted_count > 0:
+                # Dual-write to JSON if enabled (for rollback safety)
+                self._dual_write_bulk_delete(ids)
+            
+            return deleted_count
+        
+        # Phase 3: Delete from JSON (primary storage)
         incomes = self._load_incomes()
         initial_count = len(incomes)
         
