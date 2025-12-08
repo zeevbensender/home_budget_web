@@ -30,7 +30,8 @@ services:
     container_name: home_budget_backend
     restart: always
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     environment:
       DATABASE_URL: postgresql://poc_user:poc_password@db:5432/poc_db
       ENV: dev
@@ -41,6 +42,7 @@ services:
       - "8000:8000"
     volumes:
       - ./backend/app:/app/app    # hot-reload in development
+      - ./backend/migrations:/app/migrations  # for migration changes
     command: >
       uvicorn app.main:app
       --host 0.0.0.0
