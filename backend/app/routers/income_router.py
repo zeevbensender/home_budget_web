@@ -1,13 +1,12 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from typing import Optional
+from sqlalchemy.orm import Session
 
+from app.core.database import get_db
 from app.services.income_service import IncomeService
 
 router = APIRouter()
-
-# Initialize service (uses JSON storage)
-income_service = IncomeService()
 
 
 class IncomeCreate(BaseModel):
@@ -25,19 +24,22 @@ class IncomeUpdate(BaseModel):
 
 
 @router.get("/income")
-def list_incomes():
+def list_incomes(db: Session = Depends(get_db)):
+    income_service = IncomeService(db)
     return income_service.list_incomes()
 
 
 @router.post("/income")
-def create_income(income: IncomeCreate):
+def create_income(income: IncomeCreate, db: Session = Depends(get_db)):
+    income_service = IncomeService(db)
     data = income.model_dump()
     created_income = income_service.create_income(data)
     return {"status": "created", "income": created_income}
 
 
 @router.patch("/income/{income_id}")
-def update_income(income_id: int, update: IncomeUpdate):
+def update_income(income_id: int, update: IncomeUpdate, db: Session = Depends(get_db)):
+    income_service = IncomeService(db)
     try:
         updated_income = income_service.update_income(
             income_id, update.field, update.value
@@ -50,7 +52,8 @@ def update_income(income_id: int, update: IncomeUpdate):
 
 
 @router.delete("/income/{income_id}")
-def delete_income(income_id: int):
+def delete_income(income_id: int, db: Session = Depends(get_db)):
+    income_service = IncomeService(db)
     deleted = income_service.delete_income(income_id)
     if not deleted:
         raise HTTPException(status_code=404, detail="Income not found")
@@ -62,6 +65,7 @@ class BulkDeleteRequest(BaseModel):
 
 
 @router.post("/income/bulk-delete")
-def bulk_delete_income(req: BulkDeleteRequest):
+def bulk_delete_income(req: BulkDeleteRequest, db: Session = Depends(get_db)):
+    income_service = IncomeService(db)
     deleted_count = income_service.bulk_delete_incomes(req.ids)
     return {"status": "deleted", "count": deleted_count}
