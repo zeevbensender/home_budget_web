@@ -10,7 +10,7 @@ echo "PostgreSQL is ready!"
 
 echo "Running database migrations..."
 cd /app
-alembic upgrade head
+alembic -c /app/alembic.ini upgrade head
 
 echo "Starting application..."
 exec "$@"

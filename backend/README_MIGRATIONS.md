@@ -30,7 +30,7 @@ If you need to run migrations manually:
 # Inside the backend container
 docker exec -it home_budget_backend bash
 cd /app
-alembic upgrade head
+alembic -c /app/alembic.ini upgrade head
 
 # Or from your local machine (if database is accessible)
 cd backend
@@ -68,10 +68,10 @@ docker-compose up
 
 ```bash
 # Show current migration version
-docker exec -it home_budget_backend alembic current
+docker exec -it home_budget_backend alembic -c /app/alembic.ini current
 
 # Show migration history
-docker exec -it home_budget_backend alembic history
+docker exec -it home_budget_backend alembic -c /app/alembic.ini history
 ```
 
 ## Docker Compose Configuration
