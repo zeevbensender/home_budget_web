@@ -32,10 +32,11 @@ services:
     depends_on:
       - db
     environment:
-      DATABASE_URL: postgresql://budget:budget@db:5432/budget_db
+      DATABASE_URL: postgresql://poc_user:poc_password@db:5432/poc_db
       ENV: dev
       HOST: 0.0.0.0
       PORT: 8000
+      FF_DUAL_WRITE_ENABLED: "true"
     ports:
       - "8000:8000"
     volumes:
