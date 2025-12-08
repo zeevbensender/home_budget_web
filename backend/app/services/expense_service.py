@@ -17,6 +17,7 @@ from sqlalchemy.orm import Session
 from app.core.feature_flags import is_feature_enabled
 from app.core.settings import get_default_currency
 from app.core.storage import load_json, save_json
+from app.models.expense import Expense
 from app.repositories.expense_repository import ExpenseRepository
 
 logger = logging.getLogger(__name__)
@@ -85,8 +86,6 @@ class ExpenseService:
         Returns:
             Dictionary with date as string and amount as float
         """
-        from app.models.expense import Expense
-        
         # Handle both model instances and dictionaries
         if isinstance(expense, Expense):
             return {

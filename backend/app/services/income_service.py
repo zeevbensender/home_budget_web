@@ -17,6 +17,7 @@ from sqlalchemy.orm import Session
 from app.core.feature_flags import is_feature_enabled
 from app.core.settings import get_default_currency
 from app.core.storage import load_json, save_json
+from app.models.income import Income
 from app.repositories.income_repository import IncomeRepository
 
 logger = logging.getLogger(__name__)
@@ -85,8 +86,6 @@ class IncomeService:
         Returns:
             Dictionary with date as string and amount as float
         """
-        from app.models.income import Income
-        
         # Handle both model instances and dictionaries
         if isinstance(income, Income):
             return {
