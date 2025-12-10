@@ -17,6 +17,7 @@ from sqlalchemy.orm import Session
 from app.core.feature_flags import is_feature_enabled
 from app.core.settings import get_default_currency
 from app.core.storage import load_json, save_json
+from app.models.expense import Expense
 from app.repositories.expense_repository import ExpenseRepository
 
 logger = logging.getLogger(__name__)
@@ -76,12 +77,51 @@ class ExpenseService:
         
         return db_data
     
+    def _convert_from_db_format(self, expense) -> Dict[str, Any]:
+        """Convert SQLAlchemy model instance to dictionary format.
+        
+        Args:
+            expense: SQLAlchemy Expense model instance
+        
+        Returns:
+            Dictionary with date as string and amount as float
+        """
+        # Handle both model instances and dictionaries
+        if isinstance(expense, Expense):
+            return {
+                "id": expense.id,
+                "date": expense.date.strftime("%Y-%m-%d"),
+                "business": expense.business,
+                "category": expense.category,
+                "amount": float(expense.amount),
+                "account": expense.account,
+                "currency": expense.currency,
+                "notes": expense.notes,
+            }
+        return expense
+    
     def _dual_write_create(self, expense: Dict[str, Any]) -> None:
-        """Write expense to database in dual-write mode.
+        """Write expense to secondary storage in dual-write mode.
+        
+        In Phase 4 with USE_DATABASE_STORAGE=true, this writes to JSON.
+        In Phase 3 with DUAL_WRITE_ENABLED=true, this writes to DB.
         
         Args:
             expense: Expense dictionary to write
         """
+        # Phase 4: When reading from DB, dual-write to JSON
+        if is_feature_enabled("USE_DATABASE_STORAGE"):
+            if is_feature_enabled("DUAL_WRITE_ENABLED"):
+                try:
+                    expenses = self._load_expenses()
+                    expenses.append(expense)
+                    self._save_expenses(expenses)
+                    logger.info(f"Dual-write: Created expense {expense['id']} in JSON")
+                except Exception as e:
+                    logger.warning(f"Dual-write to JSON failed for expense {expense['id']}: {e}")
+            return
+        
+        # Phase 3: When reading from JSON, dual-write to DB
         if not is_feature_enabled("DUAL_WRITE_ENABLED"):
             return
         
@@ -97,12 +137,31 @@ class ExpenseService:
             logger.warning(f"Dual-write failed for expense {expense['id']}: {e}")
     
     def _dual_write_update(self, expense_id: int, data: Dict[str, Any]) -> None:
-        """Update expense in database in dual-write mode.
+        """Update expense in secondary storage in dual-write mode.
+        
+        In Phase 4 with USE_DATABASE_STORAGE=true, this updates JSON.
+        In Phase 3 with DUAL_WRITE_ENABLED=true, this updates DB.
         
         Args:
             expense_id: Expense ID
             data: Updated fields
         """
+        # Phase 4: When reading from DB, dual-write to JSON
+        if is_feature_enabled("USE_DATABASE_STORAGE"):
+            if is_feature_enabled("DUAL_WRITE_ENABLED"):
+                try:
+                    expenses = self._load_expenses()
+                    for expense in expenses:
+                        if expense["id"] == expense_id:
+                            expense.update(data)
+                            break
+                    self._save_expenses(expenses)
+                    logger.info(f"Dual-write: Updated expense {expense_id} in JSON")
+                except Exception as e:
+                    logger.warning(f"Dual-write to JSON failed for expense {expense_id}: {e}")
+            return
+        
+        # Phase 3: When reading from JSON, dual-write to DB
         if not is_feature_enabled("DUAL_WRITE_ENABLED"):
             return
         
@@ -118,11 +177,27 @@ class ExpenseService:
             logger.warning(f"Dual-write failed for expense {expense_id}: {e}")
     
     def _dual_write_delete(self, expense_id: int) -> None:
-        """Delete expense from database in dual-write mode.
+        """Delete expense from secondary storage in dual-write mode.
+        
+        In Phase 4 with USE_DATABASE_STORAGE=true, this deletes from JSON.
+        In Phase 3 with DUAL_WRITE_ENABLED=true, this deletes from DB.
         
         Args:
             expense_id: Expense ID to delete
         """
+        # Phase 4: When reading from DB, dual-write to JSON
+        if is_feature_enabled("USE_DATABASE_STORAGE"):
+            if is_feature_enabled("DUAL_WRITE_ENABLED"):
+                try:
+                    expenses = self._load_expenses()
+                    expenses = [e for e in expenses if e["id"] != expense_id]
+                    self._save_expenses(expenses)
+                    logger.info(f"Dual-write: Deleted expense {expense_id} from JSON")
+                except Exception as e:
+                    logger.warning(f"Dual-write to JSON failed for expense {expense_id}: {e}")
+            return
+        
+        # Phase 3: When reading from JSON, dual-write to DB
         if not is_feature_enabled("DUAL_WRITE_ENABLED"):
             return
         
@@ -137,11 +212,27 @@ class ExpenseService:
             logger.warning(f"Dual-write failed for expense {expense_id}: {e}")
     
     def _dual_write_bulk_delete(self, ids: List[int]) -> None:
-        """Bulk delete expenses from database in dual-write mode.
+        """Bulk delete expenses from secondary storage in dual-write mode.
+        
+        In Phase 4 with USE_DATABASE_STORAGE=true, this deletes from JSON.
+        In Phase 3 with DUAL_WRITE_ENABLED=true, this deletes from DB.
         
         Args:
             ids: List of expense IDs to delete
         """
+        # Phase 4: When reading from DB, dual-write to JSON
+        if is_feature_enabled("USE_DATABASE_STORAGE"):
+            if is_feature_enabled("DUAL_WRITE_ENABLED"):
+                try:
+                    expenses = self._load_expenses()
+                    expenses = [e for e in expenses if e["id"] not in ids]
+                    self._save_expenses(expenses)
+                    logger.info(f"Dual-write: Bulk deleted {len(ids)} expenses from JSON")
+                except Exception as e:
+                    logger.warning(f"Dual-write bulk delete to JSON failed: {e}")
+            return
+        
+        # Phase 3: When reading from JSON, dual-write to DB
         if not is_feature_enabled("DUAL_WRITE_ENABLED"):
             return
         
@@ -161,6 +252,12 @@ class ExpenseService:
         Returns:
             List of expense dictionaries
         """
+        # Phase 4: Read from database if feature flag is enabled
+        if is_feature_enabled("USE_DATABASE_STORAGE") and self.repository:
+            expenses = self.repository.list(order_by="-date")
+            return [self._convert_from_db_format(e) for e in expenses]
+        
+        # Fallback to JSON storage
         return self._load_expenses()
     
     def get_expense(self, expense_id: int) -> Optional[Dict[str, Any]]:
@@ -172,6 +269,12 @@ class ExpenseService:
         Returns:
             Expense dictionary if found, None otherwise
         """
+        # Phase 4: Read from database if feature flag is enabled
+        if is_feature_enabled("USE_DATABASE_STORAGE") and self.repository:
+            expense = self.repository.get(expense_id)
+            return self._convert_from_db_format(expense) if expense else None
+        
+        # Fallback to JSON storage
         expenses = self._load_expenses()
         for expense in expenses:
             if expense.get("id") == expense_id:
@@ -187,14 +290,27 @@ class ExpenseService:
         Returns:
             Created expense with assigned ID
         """
+        # Auto-fill currency if missing
+        if not data.get("currency"):
+            data["currency"] = get_default_currency()
+        
+        # Phase 4: Write to database if feature flag is enabled
+        if is_feature_enabled("USE_DATABASE_STORAGE") and self.repository:
+            # Write to PostgreSQL (primary storage)
+            db_data = self._convert_to_db_format(data)
+            created = self.repository.create(db_data)
+            expense = self._convert_from_db_format(created)
+            
+            # Dual-write to JSON if enabled (for rollback safety)
+            self._dual_write_create(expense)
+            
+            return expense
+        
+        # Phase 3: Write to JSON (primary storage)
         expenses = self._load_expenses()
         
         # Generate new ID
         new_id = max([e["id"] for e in expenses], default=0) + 1
-        
-        # Auto-fill currency if missing
-        if not data.get("currency"):
-            data["currency"] = get_default_currency()
         
         # Create expense record
         expense = {**data, "id": new_id}
@@ -224,6 +340,32 @@ class ExpenseService:
         Returns:
             Updated expense if found, None otherwise
         """
+        # Phase 4: Update in database if feature flag is enabled
+        if is_feature_enabled("USE_DATABASE_STORAGE") and self.repository:
+            # Get existing expense from database
+            existing = self.repository.get(expense_id)
+            if not existing:
+                return None
+            
+            # Handle currency special case
+            if field == "currency" and value is None:
+                value = get_default_currency()
+            
+            # Update in PostgreSQL (primary storage)
+            update_data = {field: value}
+            db_data = self._convert_to_db_format(update_data)
+            updated = self.repository.update(expense_id, db_data)
+            if not updated:
+                return None
+            
+            expense = self._convert_from_db_format(updated)
+            
+            # Dual-write to JSON if enabled (for rollback safety)
+            self._dual_write_update(expense_id, {field: expense[field]})
+            
+            return expense
+        
+        # Phase 3: Update in JSON (primary storage)
         expenses = self._load_expenses()
         
         for expense in expenses:
@@ -257,6 +399,24 @@ class ExpenseService:
         Returns:
             True if deleted, False if not found
         """
+        # Phase 4: Delete from database if feature flag is enabled
+        if is_feature_enabled("USE_DATABASE_STORAGE") and self.repository:
+            # Check if exists first
+            existing = self.repository.get(expense_id)
+            if not existing:
+                return False
+            
+            # Delete from PostgreSQL (primary storage)
+            deleted = self.repository.delete(expense_id)
+            
+            if deleted:
+                # Dual-write to JSON if enabled (for rollback safety)
+                self._dual_write_delete(expense_id)
+                return True
+            
+            return False
+        
+        # Phase 3: Delete from JSON (primary storage)
         expenses = self._load_expenses()
         initial_count = len(expenses)
         
@@ -282,6 +442,18 @@ class ExpenseService:
         Returns:
             Number of expenses actually deleted
         """
+        # Phase 4: Delete from database if feature flag is enabled
+        if is_feature_enabled("USE_DATABASE_STORAGE") and self.repository:
+            # Delete from PostgreSQL (primary storage)
+            deleted_count = self.repository.bulk_delete(ids)
+            
+            if deleted_count > 0:
+                # Dual-write to JSON if enabled (for rollback safety)
+                self._dual_write_bulk_delete(ids)
+            
+            return deleted_count
+        
+        # Phase 3: Delete from JSON (primary storage)
         expenses = self._load_expenses()
         initial_count = len(expenses)
         

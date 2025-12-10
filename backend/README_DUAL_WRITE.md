@@ -9,26 +9,50 @@ This document explains how to use the dual-write feature during the transition f
 - ✅ **Phase 1**: Repository Layer - Complete
 - ✅ **Phase 2**: Service Layer Integration - Complete
 - ✅ **Phase 3**: Dual-Write Mode - Complete
-- ⏸️ **Phase 4**: Read from Database - Not yet implemented
+- ✅ **Phase 4**: Read from Database - Complete
 - ⏸️ **Phase 5**: Full Database Mode - Not yet implemented
 
-## How Dual-Write Works
+## How It Works
 
-When dual-write is enabled, the application:
+### Phase 3: Dual-Write Mode (JSON Primary)
 
-1. **Writes to JSON first** (remains authoritative source)
-2. **Also writes to PostgreSQL** (for testing and validation)
-3. **Reads from JSON** (ensures consistency)
+When dual-write is enabled but database storage is not enabled:
+
+1. **Writes to JSON first** (primary source)
+2. **Also writes to PostgreSQL** (secondary, for testing)
+3. **Reads from JSON** (authoritative)
 4. **Logs all dual-write operations** (for monitoring)
 5. **Handles DB failures gracefully** (won't break API responses)
 
-## Enabling Dual-Write
+### Phase 4: Database Storage Mode (PostgreSQL Primary)
 
-### Using Environment Variables
+When both database storage and dual-write are enabled:
+
+1. **Writes to PostgreSQL first** (primary source)
+2. **Also writes to JSON** (secondary, for rollback safety)
+3. **Reads from PostgreSQL** (authoritative)
+4. **Logs all dual-write operations** (for monitoring)
+5. **Handles JSON failures gracefully** (won't break API responses)
+
+## Enabling Feature Flags
+
+### Phase 3: Dual-Write Mode (JSON Primary)
 
 ```bash
-# Enable dual-write mode
+# Enable dual-write mode only
 export FF_DUAL_WRITE_ENABLED=true
+
+# Start the application
+uvicorn app.main:app --host 0.0.0.0 --port 8000
+```
+
+### Phase 4: Database Storage Mode (PostgreSQL Primary)
+
+```bash
+# Enable database storage AND dual-write for rollback safety
+export FF_USE_DATABASE_STORAGE=true
+export FF_DUAL_WRITE_ENABLED=true
+export DATABASE_URL=postgresql://poc_user:poc_password@localhost:5432/poc_db
 
 # Start the application
 uvicorn app.main:app --host 0.0.0.0 --port 8000
@@ -42,20 +66,31 @@ Add to your `docker-compose.yaml`:
 services:
   backend:
     environment:
+      # Phase 3: Dual-write mode
       - FF_DUAL_WRITE_ENABLED=true
+      
+      # Phase 4: Database storage mode
+      - FF_USE_DATABASE_STORAGE=true
+      - FF_DUAL_WRITE_ENABLED=true
+      
       - DATABASE_URL=postgresql://poc_user:poc_password@db:5432/poc_db
 ```
 
 ### Using Database Configuration
 
-Alternatively, insert a feature flag in the database:
+Alternatively, insert feature flags in the database:
 
 ```sql
+-- Phase 3: Dual-write mode
 INSERT INTO feature_flags (name, enabled, description)
 VALUES ('DUAL_WRITE_ENABLED', true, 'Enable dual-write to PostgreSQL');
+
+-- Phase 4: Database storage mode
+INSERT INTO feature_flags (name, enabled, description)
+VALUES ('USE_DATABASE_STORAGE', true, 'Read from PostgreSQL instead of JSON');
 ```
 
-## Testing Dual-Write
+## Testing Phase 4: Database Storage Mode
 
 ### 1. Set up PostgreSQL
 
@@ -68,9 +103,10 @@ cd backend
 poetry run alembic upgrade head
 ```
 
-### 2. Enable Dual-Write
+### 2. Enable Database Storage with Dual-Write
 
 ```bash
+export FF_USE_DATABASE_STORAGE=true
 export FF_DUAL_WRITE_ENABLED=true
 export DATABASE_URL=postgresql://poc_user:poc_password@localhost:5432/poc_db
 ```
@@ -78,7 +114,7 @@ export DATABASE_URL=postgresql://poc_user:poc_password@localhost:5432/poc_db
 ### 3. Test API Operations
 
 ```bash
-# Create an expense (writes to JSON + PostgreSQL)
+# Create an expense (writes to PostgreSQL + JSON)
 curl -X POST http://localhost:8000/api/v1/expense \
   -H "Content-Type: application/json" \
   -d '{
@@ -90,11 +126,11 @@ curl -X POST http://localhost:8000/api/v1/expense \
     "notes": "Weekly shopping"
   }'
 
-# List expenses (reads from JSON)
+# List expenses (reads from PostgreSQL)
 curl http://localhost:8000/api/v1/expense
 ```
 
-### 4. Verify Database Writes
+### 4. Verify Database Reads
 
 ```bash
 # Connect to PostgreSQL
@@ -102,6 +138,8 @@ psql postgresql://poc_user:poc_password@localhost:5432/poc_db
 
 # Check expenses table
 SELECT * FROM expenses;
+
+# The data should match what the API returns
 ```
 
 ## Monitoring Dual-Write
@@ -183,27 +221,56 @@ print(f"DB expenses: {len(db_expenses)}")
 2. Check logs for "Dual-write failed" warnings
 3. Re-sync data by re-creating records
 
-## Disabling Dual-Write
+## Rollback Procedures
 
-To disable dual-write and return to JSON-only mode:
+### Rollback from Phase 4 to Phase 3
+
+If you encounter issues with database reads:
 
 ```bash
-# Using environment variables
+# Disable database storage, keep dual-write enabled
+export FF_USE_DATABASE_STORAGE=false
+export FF_DUAL_WRITE_ENABLED=true
+
+# Restart the application
+# This will revert to reading from JSON while still writing to both stores
+```
+
+### Rollback to JSON-Only Mode
+
+To completely disable database features:
+
+```bash
+# Disable all database features
+export FF_USE_DATABASE_STORAGE=false
 export FF_DUAL_WRITE_ENABLED=false
 
 # Or using database
-UPDATE feature_flags
-SET enabled = false
-WHERE name = 'DUAL_WRITE_ENABLED';
+UPDATE feature_flags SET enabled = false WHERE name = 'USE_DATABASE_STORAGE';
+UPDATE feature_flags SET enabled = false WHERE name = 'DUAL_WRITE_ENABLED';
+
+# Restart the application
 ```
 
 ## Next Steps
 
-Once dual-write has been running successfully:
+### Phase 4 Complete
 
-1. **Phase 4**: Enable `USE_DATABASE_STORAGE` to read from PostgreSQL
-2. **Validate**: Verify database reads match JSON data
-3. **Phase 5**: Remove JSON storage code entirely
+Once database storage has been running successfully:
+
+1. **Monitor**: Watch application logs for any dual-write failures
+2. **Validate**: Verify database reads match expected data
+3. **Compare**: Check data consistency between JSON and PostgreSQL
+4. **Prepare**: Plan for Phase 5 when ready to remove JSON storage entirely
+
+### Moving to Phase 5
+
+Once confident in Phase 4:
+
+1. **Disable Dual-Write**: Set `FF_DUAL_WRITE_ENABLED=false`
+2. **Remove JSON Code**: Clean up storage.py and related JSON code
+3. **Archive JSON**: Backup JSON files for compliance/disaster recovery
+4. **Clean Flags**: Remove feature flag checks from codebase
 
 ## Architecture Diagram
 
