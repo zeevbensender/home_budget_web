@@ -38,6 +38,7 @@ services:
       HOST: 0.0.0.0
       PORT: 8000
       FF_DUAL_WRITE_ENABLED: "true"
+      FF_USE_DATABASE_STORAGE: "true"
     ports:
       - "8000:8000"
     volumes:
