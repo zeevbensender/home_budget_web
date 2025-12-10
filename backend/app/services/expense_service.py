@@ -20,27 +20,27 @@ logger = logging.getLogger(__name__)
 
 class ExpenseService:
     """Service for managing expenses.
-    
+
     Provides business logic layer between routers and data access.
     Handles data transformation, validation, and storage operations.
     Uses PostgreSQL database as primary storage.
     """
-    
+
     def __init__(self, db: Session):
         """Initialize expense service.
-        
+
         Args:
             db: Database session for repository access
         """
         self.db = db
         self.repository = ExpenseRepository(db)
-    
+
     def _convert_from_db_format(self, expense) -> Dict[str, Any]:
         """Convert SQLAlchemy model instance to dictionary format.
-        
+
         Args:
             expense: SQLAlchemy Expense model instance
-        
+
         Returns:
             Dictionary with date as string and amount as float
         """
@@ -57,45 +57,45 @@ class ExpenseService:
                 "notes": expense.notes,
             }
         return expense
-    
+
     def list_expenses(self) -> List[Dict[str, Any]]:
         """Get all expenses.
-        
+
         Returns:
             List of expense dictionaries
         """
         expenses = self.repository.list(order_by="-date")
         return [self._convert_from_db_format(e) for e in expenses]
-    
+
     def get_expense(self, expense_id: int) -> Optional[Dict[str, Any]]:
         """Get a single expense by ID.
-        
+
         Args:
             expense_id: The expense ID
-        
+
         Returns:
             Expense dictionary if found, None otherwise
         """
         expense = self.repository.get(expense_id)
         return self._convert_from_db_format(expense) if expense else None
-    
+
     def create_expense(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """Create a new expense.
-        
+
         Args:
             data: Expense data dictionary
-        
+
         Returns:
             Created expense with assigned ID
         """
         # Auto-fill currency if missing
         if not data.get("currency"):
             data["currency"] = get_default_currency()
-        
+
         # Create in PostgreSQL database
         created = self.repository.create(data)
         return self._convert_from_db_format(created)
-    
+
     def update_expense(
         self,
         expense_id: int,
@@ -103,12 +103,12 @@ class ExpenseService:
         value: Any,
     ) -> Optional[Dict[str, Any]]:
         """Update a single field of an expense.
-        
+
         Args:
             expense_id: The expense ID
             field: The field name to update
             value: The new value
-        
+
         Returns:
             Updated expense if found, None otherwise
         """
@@ -116,25 +116,25 @@ class ExpenseService:
         existing = self.repository.get(expense_id)
         if not existing:
             return None
-        
+
         # Handle currency special case
         if field == "currency" and value is None:
             value = get_default_currency()
-        
+
         # Update in PostgreSQL database
         update_data = {field: value}
         updated = self.repository.update(expense_id, update_data)
         if not updated:
             return None
-        
+
         return self._convert_from_db_format(updated)
-    
+
     def delete_expense(self, expense_id: int) -> bool:
         """Delete an expense.
-        
+
         Args:
             expense_id: The expense ID to delete
-        
+
         Returns:
             True if deleted, False if not found
         """
@@ -142,16 +142,16 @@ class ExpenseService:
         existing = self.repository.get(expense_id)
         if not existing:
             return False
-        
+
         # Delete from PostgreSQL database
         return self.repository.delete(expense_id)
-    
+
     def bulk_delete_expenses(self, ids: List[int]) -> int:
         """Delete multiple expenses.
-        
+
         Args:
             ids: List of expense IDs to delete
-        
+
         Returns:
             Number of expenses actually deleted
         """

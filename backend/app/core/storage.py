@@ -10,7 +10,7 @@ If you see this error, update your code to use the repository layer instead.
 
 def load_json(filename, default):
     """Deprecated - JSON storage removed in Phase 5.
-    
+
     Raises:
         RuntimeError: Always raised - JSON storage is no longer supported
     """
@@ -23,7 +23,7 @@ def load_json(filename, default):
 
 def save_json(filename, data):
     """Deprecated - JSON storage removed in Phase 5.
-    
+
     Raises:
         RuntimeError: Always raised - JSON storage is no longer supported
     """
@@ -32,4 +32,3 @@ def save_json(filename, data):
         "Use the repository layer (ExpenseRepository/IncomeRepository) instead. "
         f"Attempted to save: {filename}"
     )
-
