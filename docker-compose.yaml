@@ -37,8 +37,11 @@ services:
       ENV: dev
       HOST: 0.0.0.0
       PORT: 8000
-      FF_DUAL_WRITE_ENABLED: "true"
+      # Phase 5: Full Database Mode - PostgreSQL primary storage
+      # For development: Keep dual-write enabled for safety
+      # For production: Set FF_DUAL_WRITE_ENABLED=false for optimal performance
       FF_USE_DATABASE_STORAGE: "true"
+      FF_DUAL_WRITE_ENABLED: "true"
     ports:
       - "8000:8000"
     volumes:

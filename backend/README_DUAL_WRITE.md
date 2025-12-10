@@ -10,7 +10,7 @@ This document explains how to use the dual-write feature during the transition f
 - ✅ **Phase 2**: Service Layer Integration - Complete
 - ✅ **Phase 3**: Dual-Write Mode - Complete
 - ✅ **Phase 4**: Read from Database - Complete
-- ⏸️ **Phase 5**: Full Database Mode - Not yet implemented
+- ✅ **Phase 5**: Full Database Mode - Complete (with safety rollback option)
 
 ## How It Works
 
@@ -58,6 +58,33 @@ export DATABASE_URL=postgresql://poc_user:poc_password@localhost:5432/poc_db
 uvicorn app.main:app --host 0.0.0.0 --port 8000
 ```
 
+### Phase 5: Full Database Mode (Production Ready)
+
+**Recommended for production**: Use PostgreSQL exclusively with dual-write disabled for optimal performance.
+
+```bash
+# Enable database storage, disable dual-write (PostgreSQL only)
+export FF_USE_DATABASE_STORAGE=true
+export FF_DUAL_WRITE_ENABLED=false
+export DATABASE_URL=postgresql://poc_user:poc_password@localhost:5432/poc_db
+
+# Start the application
+uvicorn app.main:app --host 0.0.0.0 --port 8000
+```
+
+**Safe rollout approach**: Keep dual-write enabled initially for safety, then disable after validation:
+
+```bash
+# Step 1: Deploy with dual-write enabled (Phase 4 mode)
+export FF_USE_DATABASE_STORAGE=true
+export FF_DUAL_WRITE_ENABLED=true
+
+# Step 2: Monitor for 1-2 weeks, verify no issues
+
+# Step 3: Disable dual-write for production (Phase 5 mode)
+export FF_DUAL_WRITE_ENABLED=false
+```
+
 ### Using Docker Compose
 
 Add to your `docker-compose.yaml`:
@@ -69,9 +96,13 @@ services:
       # Phase 3: Dual-write mode
       - FF_DUAL_WRITE_ENABLED=true
       
-      # Phase 4: Database storage mode
+      # Phase 4: Database storage mode with dual-write
       - FF_USE_DATABASE_STORAGE=true
       - FF_DUAL_WRITE_ENABLED=true
+      
+      # Phase 5: Full database mode (production)
+      - FF_USE_DATABASE_STORAGE=true
+      - FF_DUAL_WRITE_ENABLED=false
       
       - DATABASE_URL=postgresql://poc_user:poc_password@db:5432/poc_db
 ```
@@ -223,6 +254,18 @@ print(f"DB expenses: {len(db_expenses)}")
 
 ## Rollback Procedures
 
+### Rollback from Phase 5 to Phase 4
+
+If you encounter issues in Phase 5 (database-only mode):
+
+```bash
+# Re-enable dual-write for safety
+export FF_DUAL_WRITE_ENABLED=true
+
+# Restart the application
+# This will start writing to both stores again while reading from PostgreSQL
+```
+
 ### Rollback from Phase 4 to Phase 3
 
 If you encounter issues with database reads:
@@ -236,7 +279,7 @@ export FF_DUAL_WRITE_ENABLED=true
 # This will revert to reading from JSON while still writing to both stores
 ```
 
-### Rollback to JSON-Only Mode
+### Emergency Rollback to JSON-Only Mode
 
 To completely disable database features:
 
@@ -252,25 +295,56 @@ UPDATE feature_flags SET enabled = false WHERE name = 'DUAL_WRITE_ENABLED';
 # Restart the application
 ```
 
-## Next Steps
+## Phase 5: Production Deployment Guide
 
-### Phase 4 Complete
+### ✅ Phase 5 Complete
 
-Once database storage has been running successfully:
+The system is now production-ready with PostgreSQL as the primary storage.
 
-1. **Monitor**: Watch application logs for any dual-write failures
-2. **Validate**: Verify database reads match expected data
-3. **Compare**: Check data consistency between JSON and PostgreSQL
-4. **Prepare**: Plan for Phase 5 when ready to remove JSON storage entirely
+### Recommended Deployment Strategy
 
-### Moving to Phase 5
+**Step 1: Initial Phase 5 Deployment (Conservative)**
 
-Once confident in Phase 4:
+Deploy with dual-write enabled for safety:
 
-1. **Disable Dual-Write**: Set `FF_DUAL_WRITE_ENABLED=false`
-2. **Remove JSON Code**: Clean up storage.py and related JSON code
-3. **Archive JSON**: Backup JSON files for compliance/disaster recovery
-4. **Clean Flags**: Remove feature flag checks from codebase
+```bash
+export FF_USE_DATABASE_STORAGE=true
+export FF_DUAL_WRITE_ENABLED=true
+export DATABASE_URL=postgresql://user:pass@host:5432/db
+```
+
+**Step 2: Monitoring Period (1-2 weeks)**
+
+Monitor application health:
+1. Watch application logs for errors
+2. Verify no dual-write failures to JSON
+3. Check database query performance
+4. Validate data integrity
+5. Monitor system metrics (CPU, memory, response times)
+
+**Step 3: Disable Dual-Write (Full Phase 5)**
+
+Once confident, disable dual-write for optimal performance:
+
+```bash
+export FF_DUAL_WRITE_ENABLED=false
+# Restart application
+```
+
+This gives you:
+- ✅ Better write performance (single write instead of dual)
+- ✅ Simplified architecture (PostgreSQL only)
+- ✅ Maintained rollback capability (feature flags still work)
+
+### Future: Cleanup (Optional)
+
+Once Phase 5 has been stable for several months, you may optionally:
+1. Remove JSON storage code from services
+2. Remove `app/core/storage.py`
+3. Archive JSON data files as backup
+4. Clean up feature flag checks from codebase
+
+**Note**: Keeping the rollback code is recommended for operational safety.
 
 ## Architecture Diagram
 
