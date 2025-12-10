@@ -10,7 +10,7 @@ from typing import Any, Dict, List, Optional
 
 from sqlalchemy.orm import Session
 
-from app.core.feature_flags import is_feature_enabled
+from app.core.feature_flags import is_feature_enabled  # For non-storage features
 from app.core.settings import get_default_currency
 from app.models.expense import Expense
 from app.repositories.expense_repository import ExpenseRepository
