@@ -20,19 +20,22 @@ from app.services.expense_service import ExpenseService
 from app.services.income_service import IncomeService
 
 
+@pytest.fixture(autouse=True)
+def clean_feature_flags():
+    """Clean up feature flag environment variables before and after each test."""
+    # Clean up before test
+    os.environ.pop("FF_USE_DATABASE_STORAGE", None)
+    os.environ.pop("FF_DUAL_WRITE_ENABLED", None)
+    
+    yield
+    
+    # Clean up after test
+    os.environ.pop("FF_USE_DATABASE_STORAGE", None)
+    os.environ.pop("FF_DUAL_WRITE_ENABLED", None)
+
+
 class TestExpenseServicePhase5:
     """Tests for ExpenseService in Phase 5 (full database mode)."""
-
-    def setup_method(self):
-        """Set up test fixtures."""
-        # Clear environment variables
-        os.environ.pop("FF_USE_DATABASE_STORAGE", None)
-        os.environ.pop("FF_DUAL_WRITE_ENABLED", None)
-
-    def teardown_method(self):
-        """Clean up after tests."""
-        os.environ.pop("FF_USE_DATABASE_STORAGE", None)
-        os.environ.pop("FF_DUAL_WRITE_ENABLED", None)
 
     def test_list_expenses_from_db_only(self):
         """Should read from database only when in Phase 5 mode."""
@@ -242,16 +245,6 @@ class TestExpenseServicePhase5:
 class TestIncomeServicePhase5:
     """Tests for IncomeService in Phase 5 (full database mode)."""
 
-    def setup_method(self):
-        """Set up test fixtures."""
-        os.environ.pop("FF_USE_DATABASE_STORAGE", None)
-        os.environ.pop("FF_DUAL_WRITE_ENABLED", None)
-
-    def teardown_method(self):
-        """Clean up after tests."""
-        os.environ.pop("FF_USE_DATABASE_STORAGE", None)
-        os.environ.pop("FF_DUAL_WRITE_ENABLED", None)
-
     def test_create_income_db_only_no_dual_write(self):
         """Should write to database only, not JSON, when dual-write is disabled."""
         with patch.dict(os.environ, {
@@ -336,16 +329,6 @@ class TestIncomeServicePhase5:
 
 class TestRollbackCapability:
     """Tests for rollback capability in Phase 5."""
-
-    def setup_method(self):
-        """Set up test fixtures."""
-        os.environ.pop("FF_USE_DATABASE_STORAGE", None)
-        os.environ.pop("FF_DUAL_WRITE_ENABLED", None)
-
-    def teardown_method(self):
-        """Clean up after tests."""
-        os.environ.pop("FF_USE_DATABASE_STORAGE", None)
-        os.environ.pop("FF_DUAL_WRITE_ENABLED", None)
 
     def test_can_rollback_to_phase4_by_enabling_dual_write(self):
         """Should be able to rollback from Phase 5 to Phase 4 by enabling dual-write."""
