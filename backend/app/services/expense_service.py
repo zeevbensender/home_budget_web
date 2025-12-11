@@ -35,6 +35,30 @@ class ExpenseService:
         self.db = db
         self.repository = ExpenseRepository(db)
 
+    def _convert_to_db_format(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        """Convert API data to database format.
+
+        Args:
+            data: Expense data dictionary (from API)
+
+        Returns:
+            Dictionary formatted for database with proper types
+        """
+        from datetime import datetime
+        from decimal import Decimal
+
+        db_data = data.copy()
+
+        # Convert date string to date object if needed
+        if isinstance(db_data.get("date"), str):
+            db_data["date"] = datetime.strptime(db_data["date"], "%Y-%m-%d").date()
+
+        # Convert amount to Decimal if needed
+        if isinstance(db_data.get("amount"), (int, float)):
+            db_data["amount"] = Decimal(str(db_data["amount"]))
+
+        return db_data
+
     def _convert_from_db_format(self, expense) -> Dict[str, Any]:
         """Convert SQLAlchemy model instance to dictionary format.
 
@@ -92,8 +116,9 @@ class ExpenseService:
         if not data.get("currency"):
             data["currency"] = get_default_currency()
 
-        # Create in PostgreSQL database
-        created = self.repository.create(data)
+        # Convert to database format and create
+        db_data = self._convert_to_db_format(data)
+        created = self.repository.create(db_data)
         return self._convert_from_db_format(created)
 
     def update_expense(
@@ -121,8 +146,8 @@ class ExpenseService:
         if field == "currency" and value is None:
             value = get_default_currency()
 
-        # Update in PostgreSQL database
-        update_data = {field: value}
+        # Convert to database format and update
+        update_data = self._convert_to_db_format({field: value})
         updated = self.repository.update(expense_id, update_data)
         if not updated:
             return None

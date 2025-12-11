@@ -1,10 +1,4 @@
-from fastapi.testclient import TestClient
-from app.main import app
-
-client = TestClient(app)
-
-
-def test_delete_expense_minimal():
+def test_delete_expense_minimal(client):
     # --- Step 1: Create an expense to delete ---
     create_payload = {
         "date": "2025-11-10",
