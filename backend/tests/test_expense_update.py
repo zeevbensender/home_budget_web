@@ -1,10 +1,4 @@
-from fastapi.testclient import TestClient
-from app.main import app
-
-client = TestClient(app)
-
-
-def test_update_expense_minimal():
+def test_update_expense_minimal(client):
     # --- Step 1: Create an expense to update ---
     create_payload = {
         "date": "2025-11-10",

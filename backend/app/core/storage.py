@@ -1,22 +1,34 @@
-import json
-import os
+"""
+Storage module - DEPRECATED (Phase 5 cleanup).
 
-DATA_DIR = os.path.join(
-    os.path.dirname(os.path.dirname(__file__)),
-    "data"
-)
+This module has been removed as part of the Phase 5 PostgreSQL migration.
+JSON storage is no longer used. All data is stored in PostgreSQL.
+
+If you see this error, update your code to use the repository layer instead.
+"""
+
 
 def load_json(filename, default):
-    path = os.path.join(DATA_DIR, filename)
-    if not os.path.exists(path):
-        return default
-    try:
-        with open(path, "r") as f:
-            return json.load(f)
-    except Exception:
-        return default
+    """Deprecated - JSON storage removed in Phase 5.
+
+    Raises:
+        RuntimeError: Always raised - JSON storage is no longer supported
+    """
+    raise RuntimeError(
+        "JSON storage has been removed in Phase 5. "
+        "Use the repository layer (ExpenseRepository/IncomeRepository) instead. "
+        f"Attempted to load: {filename}"
+    )
+
 
 def save_json(filename, data):
-    path = os.path.join(DATA_DIR, filename)
-    with open(path, "w") as f:
-        json.dump(data, f, indent=2)
+    """Deprecated - JSON storage removed in Phase 5.
+
+    Raises:
+        RuntimeError: Always raised - JSON storage is no longer supported
+    """
+    raise RuntimeError(
+        "JSON storage has been removed in Phase 5. "
+        "Use the repository layer (ExpenseRepository/IncomeRepository) instead. "
+        f"Attempted to save: {filename}"
+    )

@@ -1,10 +1,4 @@
-from fastapi.testclient import TestClient
-from app.main import app
-
-client = TestClient(app)
-
-
-def test_add_income_minimal():
+def test_add_income_minimal(client):
     """Add a simple income and verify response structure."""
     payload = {
         "date": "2025-11-10",
