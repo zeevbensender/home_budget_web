@@ -31,8 +31,8 @@ Create accounts table with:
 - `nickname` (String, 100 chars, required, unique)
 - `institution` (String, 255 chars, optional)
 - `account_type` (Enum: 'bank_account', 'credit_card', 'cash', required)
-- `currency` (String, 10 chars, default '₪')
-  - **Note:** Currently hardcoded to Israeli Shekel for MVP. Consider using ISO currency codes (e.g., 'ILS') for better internationalization in future iterations.
+- `currency` (String, 10 chars, default 'ILS')
+  - **Note:** Using ISO 4217 currency code 'ILS' (Israeli Shekel) for better internationalization. Display as '₪' symbol in UI.
 - `is_archived` (Boolean, default false)
 - `created_at` (Timestamp)
 - `updated_at` (Timestamp)
@@ -47,15 +47,17 @@ alembic revision -m "add_accounts_table"
 Store type-specific data in a flexible JSONB column:
 - `metadata` (JSONB, nullable) - stores type-specific fields:
   - **Bank Account:** 
-    - `opening_balance` (Decimal/String)
+    - `opening_balance` (Decimal - stored as string in JSON, e.g., "1000.00")
     - `account_subtype` (String: 'current' or 'savings')
-    - `overdraft_limit` (Decimal/String, optional)
+    - `overdraft_limit` (Decimal - stored as string in JSON, optional)
   - **Credit Card:** 
-    - `credit_limit` (Decimal/String, required)
+    - `credit_limit` (Decimal - stored as string in JSON, required, e.g., "5000.00")
     - `statement_day` (Integer, 1-31)
     - `payment_due_day` (Integer, 1-31)
   - **Cash:** 
-    - `opening_balance` (Decimal/String)
+    - `opening_balance` (Decimal - stored as string in JSON, e.g., "500.00")
+
+**Note:** Monetary values stored as strings in JSONB to preserve precision. Application layer converts to Decimal(10, 2) for calculations to prevent floating-point errors.
 
 **Best Practice:** JSONB allows schema flexibility without multiple tables while maintaining queryability.
 
@@ -167,7 +169,7 @@ Create migration script to:
 **Step 2:** Core fields (always visible)
 - Nickname* (required, auto-focus)
 - Institution (optional)
-- Currency (default ₪)
+- Currency (default ILS, displayed as ₪)
 
 **Step 3:** Type-specific fields (expand based on selection)
 - **Bank Account:**
