@@ -1,10 +1,4 @@
-from fastapi.testclient import TestClient
-from app.main import app
-
-client = TestClient(app)
-
-
-def test_bulk_delete_income_minimal():
+def test_bulk_delete_income_minimal(client):
     # --- Step 1: Create incomes to delete ---
     created_ids = []
     for i in range(3):

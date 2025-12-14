@@ -7,7 +7,7 @@ from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
 # Read DATABASE_URL from environment (matches .env.example)
 DATABASE_URL = os.getenv(
-    "DATABASE_URL", "postgresql://budget:budget@localhost:5432/budget_db"
+    "DATABASE_URL", "postgresql://poc_user:poc_password@localhost:5432/poc_db"
 )
 
 # Create SQLAlchemy engine

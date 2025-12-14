@@ -1,34 +1,13 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from typing import Optional
-from app.core.storage import load_json, save_json
-from app.core.settings import get_default_currency
+from sqlalchemy.orm import Session
+
+from app.core.database import get_db
+from app.services.expense_service import ExpenseService
 
 router = APIRouter()
 
-# Load from JSON or fallback demo data
-expenses = load_json("expenses.json", [
-    {
-        "id": 1,
-        "date": "2025-11-01",
-        "business": "SuperSal",
-        "category": "Groceries",
-        "amount": 142.50,
-        "account": "Visa 1234",
-        "currency": "₪",
-        "notes": "Weekly shopping",
-    },
-    {
-        "id": 2,
-        "date": "2025-11-05",
-        "business": "Rav-Kav",
-        "category": "Transport",
-        "amount": 15.00,
-        "account": "Cash",
-        "currency": "₪",
-        "notes": "Bus to work",
-    },
-])
 
 class ExpenseCreate(BaseModel):
     date: str
@@ -39,67 +18,55 @@ class ExpenseCreate(BaseModel):
     currency: Optional[str] = None  # <-- changed
     notes: Optional[str] = None
 
+
 class ExpenseUpdate(BaseModel):
     field: str
     value: str | float | None
 
+
 @router.get("/expense")
-def list_expenses():
-    return expenses
+def list_expenses(db: Session = Depends(get_db)):
+    expense_service = ExpenseService(db)
+    return expense_service.list_expenses()
+
 
 @router.post("/expense")
-def create_expense(expense: ExpenseCreate):
-    new_id = max([e["id"] for e in expenses], default=0) + 1
-    data = expense.dict()
+def create_expense(expense: ExpenseCreate, db: Session = Depends(get_db)):
+    expense_service = ExpenseService(db)
+    data = expense.model_dump()
+    created_expense = expense_service.create_expense(data)
+    return {"status": "created", "expense": created_expense}
 
-    # Auto-fill currency if missing
-    if not data.get("currency"):
-        data["currency"] = get_default_currency()
-
-    data["id"] = new_id
-    expenses.append(data)
-    save_json("expenses.json", expenses)
-    return {"status": "created", "expense": data}
 
 @router.patch("/expense/{expense_id}")
-def update_expense(expense_id: int, update: ExpenseUpdate):
-    for exp in expenses:
-        if exp["id"] == expense_id:
-            if update.field not in exp:
-                raise HTTPException(status_code=400, detail="Invalid field")
+def update_expense(expense_id: int, update: ExpenseUpdate, db: Session = Depends(get_db)):
+    expense_service = ExpenseService(db)
+    try:
+        updated_expense = expense_service.update_expense(
+            expense_id, update.field, update.value
+        )
+        if updated_expense is None:
+            raise HTTPException(status_code=404, detail="Expense not found")
+        return {"status": "updated", "expense": updated_expense}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
-            # Allow updating to null (keep old), but fallback if needed
-            if update.field == "currency" and update.value is None:
-                exp["currency"] = get_default_currency()
-            else:
-                exp[update.field] = update.value
-
-            save_json("expenses.json", expenses)
-            return {"status": "updated", "expense": exp}
-
-    raise HTTPException(status_code=404, detail="Expense not found")
 
 @router.delete("/expense/{expense_id}")
-def delete_expense(expense_id: int):
-    global expenses
-    for exp in expenses:
-        if exp["id"] == expense_id:
-            expenses = [e for e in expenses if e["id"] != expense_id]
-            save_json("expenses.json", expenses)
-            return {"status": "deleted", "id": expense_id}
-    raise HTTPException(status_code=404, detail="Expense not found")
+def delete_expense(expense_id: int, db: Session = Depends(get_db)):
+    expense_service = ExpenseService(db)
+    deleted = expense_service.delete_expense(expense_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Expense not found")
+    return {"status": "deleted", "id": expense_id}
+
 
 class BulkDeleteRequest(BaseModel):
     ids: list[int]
 
+
 @router.post("/expense/bulk-delete")
-def bulk_delete_expense(req: BulkDeleteRequest):
-    global expenses
-    before = len(expenses)
-
-    expenses = [e for e in expenses if e["id"] not in req.ids]
-
-    deleted_count = before - len(expenses)
-
-    save_json("expenses.json", expenses)
+def bulk_delete_expense(req: BulkDeleteRequest, db: Session = Depends(get_db)):
+    expense_service = ExpenseService(db)
+    deleted_count = expense_service.bulk_delete_expenses(req.ids)
     return {"status": "deleted", "count": deleted_count}
