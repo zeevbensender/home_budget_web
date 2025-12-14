@@ -270,7 +270,7 @@ Create account service layer:
 ## Testing & Quality Assurance
 
 ### Backend Testing
-- [ ] Repository unit tests (SQLite, 100% coverage target)
+- [ ] Repository unit tests (SQLite, target 85%+ coverage)
 - [ ] Service layer business logic tests
 - [ ] API endpoint integration tests (PostgreSQL)
 - [ ] Migration script tests (dry-run validation)
