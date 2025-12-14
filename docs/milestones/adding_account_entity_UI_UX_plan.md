@@ -3,15 +3,16 @@
 
 
 ## Entity Model (UI-Facing)
-- **Shared fields (single table):** nickname, institution (free text), type flag, currency (default ₪), opening/starting balance, statement day (optional), payment due date (optional), notes.
-- **Type-specific, progressive disclosure:**
-  - **Credit card:** credit limit, statement day, payment due date, minimum payment (optional), autopay account selector (free text for now).
+- **Shared fields (single table):** nickname, institution (free text), type flag, currency (default ₪), 
+ - **Type-specific, progressive disclosure:**
+  - **Credit card:** credit limit, statement day, payment due date.
   - **Bank account:** opening balance, type toggle (current/savings), overdraft limit (optional).
   - **Cash:** opening balance only.
 - **Onboarding:** Empty state with one primary CTA: **“Add account.”**  - 
 - Fields appear/vanish based on selected type to keep the mobile form short.
 
 ## Navigation & Layout
+- **Home:** current landing page with ability to add / edit expenses / incomes. Account field autocomplete or ability to create a new account
 - **Home / Accounts list:** stacked cards or rows with balance, type pill, masked trailing digits when provided. Quick actions: Edit, Update balance, Archive; reorder with drag handle (desktop) or long-press (mobile).
 - **Add / Edit surface:** full-height modal drawer on mobile; centered modal on larger screens. Primary actions pinned to bottom (Save, Cancel) for reachability.
 - **Empty state:** illustration placeholder + concise copy + "Add account" CTA; secondary link to static help ("How to organize accounts").
@@ -28,15 +29,6 @@
 3. **List management**
    - Group by **type** with sticky headers (Bank accounts, Credit cards, Cash) for scannability.
    - Custom ordering; archived/closed items collapsed under **Archived**.
-4. **Balance updates (manual)**
-   - Quick **Update balance** opens numeric keypad; enforces currency format; optional reconciliation note.
-5. **Alerts (future-ready placeholder)**
-   - Non-blocking banners on cards for upcoming due dates or high utilization; hidden until feature is enabled.
-
-## Data Entry Patterns (Manual-First)
-- Currency defaults to ₪; if multi-currency is added later, reuse the same control (dropdown disabled for now to avoid confusion).
-- Masked number input pattern: `•••• 1234` with tap-to-reveal for the session; auto-hide on blur.
-- Institution: simple free-text field, autocomplete-ready for a static suggestions list later.
 
 ## Visual Style References
 - **Account cards:** clean tiles with type badge (color-coded), bold balance, masked trailing digits, and secondary metadata (institution + last updated).
@@ -47,12 +39,10 @@
 - Touch targets ≥ 44px, clear focus outlines, labels always visible, helper text for optional fields.
 - Inline error messaging under fields; toast confirmation after save.
 
-## Migration & Future-Proofing (UI Only)
-- Temporary banner: **“We now support account types—edit entries to set their type.”** Opens the Edit modal for existing rows.
-- Single-table layout retained with visible type chips; chips should be filter/search ready.
-- Reserve space in layouts for future: institution logos, connection status, alerts, budgeting hooks (net worth, utilization tags).
-
 ## Minimal Checkpoints for This Milestone
 - Empty state with Add CTA; responsive list cards; Add/Edit modal with progressive disclosure.
 - Manual balance update action per account.
 - Masking behavior and basic validation in place.
+
+## Migration
+- One time migration process from incomes and expenses tables (account column) to the new table(s)
