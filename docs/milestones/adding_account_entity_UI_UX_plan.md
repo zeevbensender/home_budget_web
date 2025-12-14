@@ -32,6 +32,7 @@ Create accounts table with:
 - `institution` (String, 255 chars, optional)
 - `account_type` (Enum: 'bank_account', 'credit_card', 'cash', required)
 - `currency` (String, 10 chars, default '₪')
+  - **Note:** Currently hardcoded to Israeli Shekel for MVP. Consider using ISO currency codes (e.g., 'ILS') for better internationalization in future iterations.
 - `is_archived` (Boolean, default false)
 - `created_at` (Timestamp)
 - `updated_at` (Timestamp)
@@ -45,9 +46,16 @@ alembic revision -m "add_accounts_table"
 #### 1.2 Type-Specific Fields (JSONB)
 Store type-specific data in a flexible JSONB column:
 - `metadata` (JSONB, nullable) - stores type-specific fields:
-  - **Bank Account:** `opening_balance`, `account_subtype` (current/savings), `overdraft_limit`
-  - **Credit Card:** `credit_limit`, `statement_day`, `payment_due_day`
-  - **Cash:** `opening_balance`
+  - **Bank Account:** 
+    - `opening_balance` (Decimal/String)
+    - `account_subtype` (String: 'current' or 'savings')
+    - `overdraft_limit` (Decimal/String, optional)
+  - **Credit Card:** 
+    - `credit_limit` (Decimal/String, required)
+    - `statement_day` (Integer, 1-31)
+    - `payment_due_day` (Integer, 1-31)
+  - **Cash:** 
+    - `opening_balance` (Decimal/String)
 
 **Best Practice:** JSONB allows schema flexibility without multiple tables while maintaining queryability.
 
@@ -380,14 +388,14 @@ If issues arise:
 
 ## Timeline Estimate
 
-| Phase | Estimated Effort | Dependencies |
-|-------|------------------|--------------|
-| Phase 1: Backend Foundation | 2-3 days | None |
-| Phase 2: Data Migration | 1-2 days | Phase 1 complete |
-| Phase 3: Frontend UI | 3-4 days | Phase 1 complete |
-| Phase 4: Visual Polish | 1-2 days | Phase 3 complete |
-| Testing & QA | 1-2 days | All phases |
-| **Total** | **8-13 days** | |
+| Phase                       | Estimated Effort | Dependencies       |
+|-----------------------------|------------------|--------------------|
+| Phase 1: Backend Foundation | 2-3 days         | None               |
+| Phase 2: Data Migration     | 1-2 days         | Phase 1 complete   |
+| Phase 3: Frontend UI        | 3-4 days         | Phase 1 complete   |
+| Phase 4: Visual Polish      | 1-2 days         | Phase 3 complete   |
+| Testing & QA                | 1-2 days         | All phases         |
+| Total                       | 8-13 days        |                    |
 
 **Note:** Timeline assumes one developer working full-time. Adjust based on team capacity.
 
