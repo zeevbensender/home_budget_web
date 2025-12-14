@@ -381,7 +381,7 @@ If issues arise:
 ## Timeline Estimate
 
 | Phase | Estimated Effort | Dependencies |
-|-------|-----------------|--------------|
+|-------|------------------|--------------|
 | Phase 1: Backend Foundation | 2-3 days | None |
 | Phase 2: Data Migration | 1-2 days | Phase 1 complete |
 | Phase 3: Frontend UI | 3-4 days | Phase 1 complete |
