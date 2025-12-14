@@ -32,7 +32,7 @@ Create accounts table with:
 - `institution` (String, 255 chars, optional)
 - `account_type` (Enum: 'bank_account', 'credit_card', 'cash', required)
 - `currency` (String, 10 chars, default 'ILS')
-  - **Note:** Using ISO 4217 currency code 'ILS' (Israeli Shekel) for better internationalization. Display as '₪' symbol in UI.
+  - **Note:** Using ISO 4217 currency code. Default is 'ILS' (Israeli Shekel) per project requirements. Display as '₪' symbol in UI. For other projects, use appropriate ISO code (e.g., 'USD', 'EUR').
 - `is_archived` (Boolean, default false)
 - `created_at` (Timestamp)
 - `updated_at` (Timestamp)
@@ -45,19 +45,23 @@ alembic revision -m "add_accounts_table"
 
 #### 1.2 Type-Specific Fields (JSONB)
 Store type-specific data in a flexible JSONB column:
-- `metadata` (JSONB, nullable) - stores type-specific fields:
+- `metadata` (JSONB, nullable) - stores type-specific fields
+
+**Monetary Field Format:** All monetary values stored as strings in JSON format (e.g., "1000.00") to preserve decimal precision.
+
+**Field Definitions by Account Type:**
   - **Bank Account:** 
-    - `opening_balance` (Decimal - stored as string in JSON, e.g., "1000.00")
+    - `opening_balance` (Monetary field)
     - `account_subtype` (String: 'current' or 'savings')
-    - `overdraft_limit` (Decimal - stored as string in JSON, optional)
+    - `overdraft_limit` (Monetary field, optional)
   - **Credit Card:** 
-    - `credit_limit` (Decimal - stored as string in JSON, required, e.g., "5000.00")
+    - `credit_limit` (Monetary field, required)
     - `statement_day` (Integer, 1-31)
     - `payment_due_day` (Integer, 1-31)
   - **Cash:** 
-    - `opening_balance` (Decimal - stored as string in JSON, e.g., "500.00")
+    - `opening_balance` (Monetary field)
 
-**Note:** Monetary values stored as strings in JSONB to preserve precision. Application layer converts to Decimal(10, 2) for calculations to prevent floating-point errors.
+**Note:** Application layer converts monetary strings to Decimal(10, 2) for calculations to prevent floating-point errors.
 
 **Best Practice:** JSONB allows schema flexibility without multiple tables while maintaining queryability.
 
@@ -394,10 +398,12 @@ If issues arise:
 |-----------------------------|------------------|--------------------|
 | Phase 1: Backend Foundation | 2-3 days         | None               |
 | Phase 2: Data Migration     | 1-2 days         | Phase 1 complete   |
-| Phase 3: Frontend UI        | 3-4 days         | Phase 1 complete   |
+| Phase 3: Frontend UI        | 3-4 days         | Phase 1 complete*  |
 | Phase 4: Visual Polish      | 1-2 days         | Phase 3 complete   |
 | Testing & QA                | 1-2 days         | All phases         |
 | Total                       | 8-13 days        |                    |
+
+**Note:** *Phase 3 can start after Phase 1 is complete. Phase 2 migration can run in parallel with Phase 3 development, though full testing requires Phase 2 completion.
 
 **Note:** Timeline assumes one developer working full-time. Adjust based on team capacity.
 
