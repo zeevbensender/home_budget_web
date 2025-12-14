@@ -9,18 +9,23 @@ echo "Waiting for PostgreSQL to be ready..."
 DB_HOST="db"
 DB_PORT="5432"
 
-if [ ! -z "$DATABASE_URL" ]; then
+if [ -n "$DATABASE_URL" ]; then
   # Extract host and port from DATABASE_URL using parameter expansion and sed
   # Remove protocol prefix
   DB_URL_NO_PROTOCOL="${DATABASE_URL#*://}"
   # Extract the host:port part (between @ and /)
-  DB_HOST_PORT=$(echo "$DB_URL_NO_PROTOCOL" | sed 's/.*@\([^/]*\).*/\1/')
-  
-  if [[ "$DB_HOST_PORT" == *:* ]]; then
-    DB_HOST="${DB_HOST_PORT%:*}"
-    DB_PORT="${DB_HOST_PORT#*:}"
-  else
-    DB_HOST="$DB_HOST_PORT"
+  # Format: user:password@host:port/database
+  if [[ "$DB_URL_NO_PROTOCOL" == *@* ]]; then
+    DB_HOST_PORT=$(echo "$DB_URL_NO_PROTOCOL" | sed 's/.*@\([^/]*\).*/\1/')
+    
+    if [[ "$DB_HOST_PORT" == *:* ]]; then
+      DB_HOST="${DB_HOST_PORT%:*}"
+      DB_PORT="${DB_HOST_PORT#*:}"
+    else
+      # No port specified, use host and default port
+      DB_HOST="$DB_HOST_PORT"
+      DB_PORT="5432"
+    fi
   fi
 fi
 
