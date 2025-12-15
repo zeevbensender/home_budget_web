@@ -30,7 +30,7 @@ Create accounts table with:
 - `id` (Primary Key, Integer, Auto-increment)
 - `nickname` (String, 100 chars, required, unique)
 - `institution` (String, 255 chars, optional)
-- `account_type` (Enum: 'bank_account', 'credit_card', 'cash', required)
+- `account_type` (Enum: 'bank_account', 'credit_card', 'cash', 'unspecified', required)
 - `currency` (String, 10 chars, default 'ILS')
   - **Note:** Using ISO 4217 currency code. Default is 'ILS' (Israeli Shekel) per project requirements. Display as '₪' symbol in UI. For other projects, use appropriate ISO code (e.g., 'USD', 'EUR').
 - `is_archived` (Boolean, default false)
@@ -109,8 +109,19 @@ Create `AccountRouter` with RESTful endpoints:
 #### 2.1 Extract Unique Accounts
 Create migration script to:
 1. Extract all unique account names from expenses and incomes
-2. Create Account records (type='bank_account' as default)
+2. Create Account records with `type='unspecified'` for migrated accounts
 3. Preserve data integrity
+
+**Migration Account Type Strategy:**
+- **Use 'unspecified' type** for all accounts extracted during migration
+- This avoids incorrect assumptions about account types
+- Allows users to properly categorize their accounts post-migration
+- Prevents type-specific validation errors for legacy data
+
+**Rationale:** 
+- Setting `type='bank_account'` as default would be incorrect for credit cards and cash accounts
+- Using 'unspecified' makes it explicit that user action is needed
+- Users can update account types through the UI after migration
 
 **Best Practice:** Make migration idempotent and include rollback script.
 
@@ -131,6 +142,28 @@ Create migration script to:
 - Handle edge cases (account names with variations)
 - Create manual review report for unmapped records
 
+#### 2.4 Post-Migration User Workflow
+**Goal:** Guide users to classify their migrated accounts
+
+**Implementation:**
+1. **One-time Setup Wizard (optional but recommended):**
+   - Show on first login after migration
+   - Display list of 'unspecified' accounts
+   - Allow bulk classification with quick action buttons
+   - Skip option available (can classify later from account list)
+
+2. **Persistent Reminder:**
+   - Show account count badge in navigation: "Accounts (X unspecified)"
+   - Dashboard widget: "Complete your account setup"
+   - Dismissible notification with deep link to account list
+
+3. **Gradual Classification:**
+   - Users can classify accounts as they work with them
+   - When adding transaction to unspecified account, show inline prompt
+   - Quick action: "This looks like a credit card. Change account type?"
+
+**Best Practice:** Don't force immediate classification - allow users to work at their own pace while providing clear guidance.
+
 ---
 
 ### Phase 3: Frontend - Account Management UI
@@ -140,13 +173,19 @@ Create migration script to:
 **Navigation:** Add "Accounts" link to main navigation
 
 **Layout:**
-- Grouped by type (Bank Accounts, Credit Cards, Cash)
+- Grouped by type (Bank Accounts, Credit Cards, Cash, Unspecified)
 - Card-based layout with visual hierarchy:
   - Account nickname (prominent)
   - Type badge (color-coded)
   - Institution name (secondary)
   - Balance placeholder (future)
   - Last updated timestamp
+  
+**Special Handling for 'Unspecified' Accounts:**
+- Show warning badge: "Type not set"
+- Display prominent "Set account type" action button
+- Sort 'Unspecified' group at the top to encourage user action
+- Optional: Show dismissible banner: "X accounts need type classification"
   
 **Actions per card:**
 - Edit (pencil icon)
@@ -169,6 +208,9 @@ Create migration script to:
 - Bank Account
 - Credit Card  
 - Cash
+- Unspecified (only shown when editing existing unspecified accounts)
+
+**Note:** 'Unspecified' type is not available when creating new accounts. It's only used for migrated legacy accounts that need user classification.
 
 **Step 2:** Core fields (always visible)
 - Nickname* (required, auto-focus)
@@ -236,6 +278,12 @@ Create account service layer:
 - Bank Account: Blue (#2563EB)
 - Credit Card: Purple (#7C3AED)
 - Cash: Green (#059669)
+- Unspecified: Amber (#F59E0B) with warning icon
+
+**Special Visual Treatment for Unspecified Accounts:**
+- Amber/orange badge with warning icon to draw attention
+- Dashed border on account card (subtle indication of incomplete setup)
+- "Set Type" action button in primary color (high visibility)
 
 **Account Cards:**
 - Clean tile design with subtle shadow
