@@ -16,7 +16,7 @@ The deployed backend (hbw-backend.onrender.com) was running outdated code that o
 
 ## Solution
 
-PUT endpoints were added to the backend in commit `ed6469b` (December 15, 2025 at 11:23 UTC) and are present in the main branch:
+PUT endpoints were added to the backend in commit `ed6469b8` (December 15, 2025 at 11:23 UTC) and are present in the main branch:
 
 ### Backend Changes (Already Implemented)
 - **File**: `backend/app/routers/expense_router.py` (lines 65-91)
@@ -118,6 +118,6 @@ The PUT endpoints gracefully handle extra fields (`id`, `type`) that the fronten
 
 ## References
 
-- Commit adding PUT endpoints: `ed6469b`
+- Commit adding PUT endpoints: `ed6469b8`
 - Related PR: #90 "Fix mobile transaction modal double API call bug and add PUT endpoints"
 - Tests: `backend/tests/test_put_endpoint_extra_fields.py`, `backend/tests/test_mobile_edit_flow.py`

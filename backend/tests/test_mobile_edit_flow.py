@@ -1,4 +1,8 @@
-"""End-to-end test for mobile edit flow using PUT endpoint."""
+"""End-to-end test for mobile edit flow using PUT endpoint.
+
+Note: The 'client' fixture is automatically available from conftest.py
+and does not need to be imported explicitly per project conventions.
+"""
 
 
 def test_mobile_edit_expense_full_flow(client):

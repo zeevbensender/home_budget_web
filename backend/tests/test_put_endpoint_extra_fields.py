@@ -1,4 +1,8 @@
-"""Test that PUT endpoints handle extra fields from frontend gracefully."""
+"""Test that PUT endpoints handle extra fields from frontend gracefully.
+
+Note: The 'client' fixture is automatically available from conftest.py
+and does not need to be imported explicitly per project conventions.
+"""
 
 def test_put_expense_with_extra_fields_from_frontend(client):
     """
