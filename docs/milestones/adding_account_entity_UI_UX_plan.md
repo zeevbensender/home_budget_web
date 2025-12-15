@@ -31,6 +31,7 @@ Create accounts table with:
 - `nickname` (String, 100 chars, required, unique)
 - `institution` (String, 255 chars, optional)
 - `account_type` (Enum: 'bank_account', 'credit_card', 'cash', 'unspecified', required)
+  - **Note:** 'unspecified' type is reserved for migrated legacy accounts only. Application should prevent creating new accounts with this type.
 - `currency` (String, 10 chars, default 'ILS')
   - **Note:** Using ISO 4217 currency code. Default is 'ILS' (Israeli Shekel) per project requirements. Display as '₪' symbol in UI. For other projects, use appropriate ISO code (e.g., 'USD', 'EUR').
 - `is_archived` (Boolean, default false)
@@ -81,6 +82,7 @@ Create `AccountService` with business logic:
 - Validate unique nicknames
 - Handle metadata validation per account type
 - Prevent deletion of accounts with transactions (soft delete via archive)
+- **Validation:** Reject creating new accounts with `type='unspecified'` (reserved for migration only)
 
 **File:** `backend/app/services/account_service.py`
 
@@ -173,7 +175,7 @@ Create migration script to:
 **Navigation:** Add "Accounts" link to main navigation
 
 **Layout:**
-- Grouped by type (Bank Accounts, Credit Cards, Cash, Unspecified)
+- Grouped by type with display order: Unspecified (if any), Bank Accounts, Credit Cards, Cash
 - Card-based layout with visual hierarchy:
   - Account nickname (prominent)
   - Type badge (color-coded)
@@ -184,7 +186,7 @@ Create migration script to:
 **Special Handling for 'Unspecified' Accounts:**
 - Show warning badge: "Type not set"
 - Display prominent "Set account type" action button
-- Sort 'Unspecified' group at the top to encourage user action
+- **Display Order:** 'Unspecified' group shown first (at the top) to encourage user action
 - Optional: Show dismissible banner: "X accounts need type classification"
   
 **Actions per card:**
