@@ -120,6 +120,13 @@ Create migration script to:
 - Allows users to properly categorize their accounts post-migration
 - Prevents type-specific validation errors for legacy data
 
+**Nickname Conflict Resolution:**
+- Account nicknames must be unique in the new schema
+- If duplicate account names exist in legacy data (unlikely but possible):
+  - Append suffix to duplicates: "Account Name (2)", "Account Name (3)", etc.
+  - Log all renamed accounts for manual review
+  - Create report for admin to merge or correct post-migration
+
 **Rationale:** 
 - Setting `type='bank_account'` as default would be incorrect for credit cards and cash accounts
 - Using 'unspecified' makes it explicit that user action is needed
@@ -176,6 +183,7 @@ Create migration script to:
 
 **Layout:**
 - Grouped by type with display order: Unspecified (if any), Bank Accounts, Credit Cards, Cash
+- **Note:** Unspecified group is only shown when unspecified accounts exist; it's hidden otherwise
 - Card-based layout with visual hierarchy:
   - Account nickname (prominent)
   - Type badge (color-coded)
