@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import "./transactionModal.css";
 
 export default function TransactionModal({
@@ -8,7 +8,7 @@ export default function TransactionModal({
   onClose,
   onSubmit,                 // parent handles local state refresh
 }) {
-  const emptyState = {
+  const emptyState = useMemo(() => ({
     type: "expense",
     date: "",
     business: "",
@@ -17,7 +17,7 @@ export default function TransactionModal({
     account: "",
     currency: "₪",
     notes: "",
-  };
+  }), []);
 
   const [formData, setFormData] = useState(emptyState);
 
@@ -40,7 +40,7 @@ export default function TransactionModal({
     } else {
       setFormData(emptyState);
     }
-  }, [isOpen, mode, initialData]);
+  }, [isOpen, mode, initialData, emptyState]);
 
   if (!isOpen) return null;
 
