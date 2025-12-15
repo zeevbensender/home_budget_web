@@ -91,7 +91,7 @@
 }
 
 /* Desktop: center with smaller size */
-@media (min-width: 769px) {
+@media (min-width: 768px) {
   .dcm-overlay {
     align-items: center;
   }
