@@ -22,7 +22,7 @@ def test_put_expense_full_update(client):
     update_payload = {
         "date": "2025-12-09",
         "business": "Isradon",
-        "category": "Intertainment",
+        "category": "Entertainment",
         "amount": 378.0,
         "account": "0802",
         "currency": "₪",
@@ -37,7 +37,7 @@ def test_put_expense_full_update(client):
     assert updated["id"] == exp_id
     assert updated["date"] == "2025-12-09"
     assert updated["business"] == "Isradon"
-    assert updated["category"] == "Intertainment"
+    assert updated["category"] == "Entertainment"
     assert updated["amount"] == 378.0
     assert updated["account"] == "0802"
     assert updated["currency"] == "₪"
