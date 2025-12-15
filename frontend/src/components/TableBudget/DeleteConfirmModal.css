@@ -1,0 +1,103 @@
+/* DARK OVERLAY */
+.dcm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  backdrop-filter: blur(2px);
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  z-index: 9999;
+}
+
+/* BOTTOM SHEET */
+.dcm-sheet {
+  width: 100%;
+  max-width: 640px;
+  background: #fff;
+  border-radius: 16px 16px 0 0;
+  padding: 20px;
+  animation: dcm-slide-up 0.25s ease-out;
+  box-shadow: 0 -4px 16px rgba(0,0,0,0.15);
+}
+
+/* HANDLE BAR */
+.dcm-handle {
+  width: 38px;
+  height: 5px;
+  background: #ccc;
+  border-radius: 3px;
+  margin: 0 auto 16px auto;
+}
+
+/* TITLE */
+.dcm-title {
+  text-align: center;
+  margin-bottom: 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+/* MESSAGE */
+.dcm-message {
+  text-align: center;
+  margin-bottom: 20px;
+  color: #666;
+  font-size: 0.95rem;
+}
+
+/* BUTTONS */
+.dcm-buttons {
+  display: flex;
+  gap: 12px;
+}
+
+.dcm-cancel {
+  flex: 1;
+  background: #f0f0f0;
+  color: #333;
+  border: none;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.dcm-cancel:hover {
+  background: #e0e0e0;
+}
+
+.dcm-delete {
+  flex: 1;
+  background: #dc3545;
+  color: white;
+  border: none;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.dcm-delete:hover {
+  background: #c82333;
+}
+
+/* ANIMATION */
+@keyframes dcm-slide-up {
+  0% { transform: translateY(110%); }
+  100% { transform: translateY(0); }
+}
+
+/* Desktop: center with smaller size */
+@media (min-width: 769px) {
+  .dcm-overlay {
+    align-items: center;
+  }
+
+  .dcm-sheet {
+    max-width: 360px;
+    border-radius: 12px;
+  }
+}

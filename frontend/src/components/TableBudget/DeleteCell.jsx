@@ -1,16 +1,52 @@
 import React, { useState } from "react";
+import useIsMobile from "../../hooks/useIsMobile.js";
+import DeleteConfirmModal from "./DeleteConfirmModal.jsx";
 
 export default function DeleteCell({ row, onDelete }) {
   const [confirm, setConfirm] = useState(false);
+  const isMobile = useIsMobile();
 
+  const handleTrashClick = (e) => {
+    e.stopPropagation();
+    setConfirm(true);
+  };
+
+  const handleDelete = (e) => {
+    e?.stopPropagation();
+    onDelete(row.original.id);
+    setConfirm(false);
+  };
+
+  const handleCancel = (e) => {
+    e?.stopPropagation();
+    setConfirm(false);
+  };
+
+  // Mobile: Use modal
+  if (isMobile) {
+    return (
+      <>
+        <span
+          style={{ cursor: "pointer", opacity: 0.4 }}
+          onClick={handleTrashClick}
+        >
+          🗑️
+        </span>
+        <DeleteConfirmModal
+          isOpen={confirm}
+          onConfirm={handleDelete}
+          onCancel={handleCancel}
+        />
+      </>
+    );
+  }
+
+  // Desktop: Inline buttons
   if (!confirm) {
     return (
       <span
         style={{ cursor: "pointer", opacity: 0.4 }}
-        onClick={(e) => {
-          e.stopPropagation();
-          setConfirm(true);
-        }}
+        onClick={handleTrashClick}
       >
         🗑️
       </span>
@@ -25,19 +61,13 @@ export default function DeleteCell({ row, onDelete }) {
       Delete?
       <button
         className="btn btn-sm btn-danger ms-2"
-        onClick={(e) => {
-          e.stopPropagation();
-          onDelete(row.original.id);
-        }}
+        onClick={handleDelete}
       >
         Delete
       </button>
       <button
         className="btn btn-sm btn-secondary ms-2"
-        onClick={(e) => {
-          e.stopPropagation();
-          setConfirm(false);
-        }}
+        onClick={handleCancel}
       >
         Cancel
       </button>
