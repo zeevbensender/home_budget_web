@@ -24,6 +24,16 @@ class ExpenseUpdate(BaseModel):
     value: str | float | None
 
 
+class ExpenseFullUpdate(BaseModel):
+    date: Optional[str] = None
+    business: Optional[str] = None
+    category: Optional[str] = None
+    amount: Optional[float] = None
+    account: Optional[str] = None
+    currency: Optional[str] = None
+    notes: Optional[str] = None
+
+
 @router.get("/expense")
 def list_expenses(db: Session = Depends(get_db)):
     expense_service = ExpenseService(db)
@@ -49,6 +59,35 @@ def update_expense(expense_id: int, update: ExpenseUpdate, db: Session = Depends
             raise HTTPException(status_code=404, detail="Expense not found")
         return {"status": "updated", "expense": updated_expense}
     except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.put("/expense/{expense_id}")
+def replace_expense(expense_id: int, expense: ExpenseFullUpdate, db: Session = Depends(get_db)):
+    """Full update of an expense (for mobile modal edit)."""
+    expense_service = ExpenseService(db)
+    
+    # Get existing expense
+    existing = expense_service.repository.get(expense_id)
+    if not existing:
+        raise HTTPException(status_code=404, detail="Expense not found")
+    
+    # Build update dict with only provided fields
+    update_data = expense.model_dump(exclude_unset=True)
+    
+    # Convert to database format
+    db_update_data = expense_service._convert_to_db_format(update_data)
+    
+    # Update in database
+    try:
+        updated = expense_service.repository.update(expense_id, db_update_data)
+        if not updated:
+            raise HTTPException(status_code=404, detail="Expense not found")
+        
+        # Convert and return
+        result = expense_service._convert_from_db_format(updated)
+        return {"status": "updated", "expense": result}
+    except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
 

@@ -1,12 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import "./transactionModal.css";
-
-import {
-  createExpense,
-  createIncome,
-  updateExpense,
-  updateIncome,
-} from "../api.js";
 
 export default function TransactionModal({
   isOpen,
@@ -15,15 +8,16 @@ export default function TransactionModal({
   onClose,
   onSubmit,                 // parent handles local state refresh
 }) {
-  const emptyState = {
+  const emptyState = useMemo(() => ({
     type: "expense",
     date: "",
     business: "",
     category: "",
     amount: "",
     account: "",
+    currency: "₪",
     notes: "",
-  };
+  }), []);
 
   const [formData, setFormData] = useState(emptyState);
 
@@ -39,13 +33,14 @@ export default function TransactionModal({
         category: initialData.category || "",
         amount: initialData.amount || "",
         account: initialData.account || "",
+        currency: initialData.currency || "₪",
         notes: initialData.notes || "",
         id: initialData.id,
       });
     } else {
       setFormData(emptyState);
     }
-  }, [isOpen, mode, initialData]);
+  }, [isOpen, mode, initialData, emptyState]);
 
   if (!isOpen) return null;
 
@@ -66,29 +61,25 @@ export default function TransactionModal({
       category: formData.category,
       amount: amountNum,
       account: formData.account,
+      currency: formData.currency || "₪",
       notes: formData.notes,
     };
 
+    if (formData.type === "expense") {
+      payload.business = formData.business || "";
+    }
+
+    // Add id for edit mode
+    if (mode === "edit" && formData.id) {
+      payload.id = formData.id;
+    }
+
+    // Add type to payload for parent to determine which API to call
+    payload.type = formData.type;
+
     try {
-      let result;
-
-      if (formData.type === "expense") {
-        payload.business = formData.business || "";
-
-        if (mode === "add") {
-          result = await createExpense(payload);
-        } else {
-          result = await updateExpense(formData.id, payload);
-        }
-      } else {
-        if (mode === "add") {
-          result = await createIncome(payload);
-        } else {
-          result = await updateIncome(formData.id, payload);
-        }
-      }
-
-      onSubmit?.(result);
+      // Let parent handle the API call
+      await onSubmit?.(payload);
       onClose();
 
     } catch (err) {
@@ -169,6 +160,16 @@ export default function TransactionModal({
             type="text"
             value={formData.account}
             onChange={(e) => handleChange("account", e.target.value)}
+          />
+        </div>
+
+        {/* CURRENCY */}
+        <div className="tm-field">
+          <label>Currency</label>
+          <input
+            type="text"
+            value={formData.currency}
+            onChange={(e) => handleChange("currency", e.target.value)}
           />
         </div>
 
