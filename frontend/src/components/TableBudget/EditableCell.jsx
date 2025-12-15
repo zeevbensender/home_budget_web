@@ -1,11 +1,13 @@
 import { useState } from "react";
+import useIsMobile from "../../hooks/useIsMobile.js";
 
 export default function EditableCell({ value, field, rowIndex, updateCell, formatter }) {
   const [editing, setEditing] = useState(false);
   const [localValue, setLocalValue] = useState(value ?? "");
 
   // Check if we're in mobile mode (window width < 768px)
-  const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+  // Use the existing hook which properly handles window resize events
+  const isMobile = useIsMobile();
 
   const commit = () => {
     setEditing(false);
