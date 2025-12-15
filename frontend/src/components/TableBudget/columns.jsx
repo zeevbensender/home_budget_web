@@ -90,7 +90,6 @@ export function getColumns(type, handleDelete) {
       cell: (info) => (
         <DeleteCell
           row={info.row}
-          type={type}
           onDelete={handleDelete}
         />
       ),
