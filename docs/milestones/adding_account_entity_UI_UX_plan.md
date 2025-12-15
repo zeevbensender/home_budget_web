@@ -184,7 +184,7 @@ Create migration script to:
   - Last updated timestamp
   
 **Special Handling for 'Unspecified' Accounts:**
-- Show warning badge: "Type not set"
+- Show warning badge: "Account type needed"
 - Display prominent "Set account type" action button
 - **Display Order:** 'Unspecified' group shown first (at the top) to encourage user action
 - Optional: Show dismissible banner: "X accounts need type classification"
