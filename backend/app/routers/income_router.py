@@ -23,6 +23,15 @@ class IncomeUpdate(BaseModel):
     value: str | float | None
 
 
+class IncomeFullUpdate(BaseModel):
+    date: Optional[str] = None
+    category: Optional[str] = None
+    amount: Optional[float] = None
+    account: Optional[str] = None
+    currency: Optional[str] = None
+    notes: Optional[str] = None
+
+
 @router.get("/income")
 def list_incomes(db: Session = Depends(get_db)):
     income_service = IncomeService(db)
@@ -48,6 +57,35 @@ def update_income(income_id: int, update: IncomeUpdate, db: Session = Depends(ge
             raise HTTPException(status_code=404, detail="Income not found")
         return {"status": "updated", "income": updated_income}
     except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.put("/income/{income_id}")
+def replace_income(income_id: int, income: IncomeFullUpdate, db: Session = Depends(get_db)):
+    """Full update of an income (for mobile modal edit)."""
+    income_service = IncomeService(db)
+    
+    # Get existing income
+    existing = income_service.repository.get(income_id)
+    if not existing:
+        raise HTTPException(status_code=404, detail="Income not found")
+    
+    # Build update dict with only provided fields
+    update_data = income.model_dump(exclude_unset=True)
+    
+    # Convert to database format
+    db_update_data = income_service._convert_to_db_format(update_data)
+    
+    # Update in database
+    try:
+        updated = income_service.repository.update(income_id, db_update_data)
+        if not updated:
+            raise HTTPException(status_code=404, detail="Income not found")
+        
+        # Convert and return
+        result = income_service._convert_from_db_format(updated)
+        return {"status": "updated", "income": result}
+    except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
 

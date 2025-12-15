@@ -12,6 +12,6 @@ export default function useIsMobile(breakpoint = 768) {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, [breakpoint]);
-    console.log("isMobile: " + isMobile)
+
   return isMobile;
 }
