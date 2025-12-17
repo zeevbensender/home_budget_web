@@ -20,7 +20,7 @@ function formatAmount(value) {
   }).format(Number(value));
 }
 
-export function getColumns(type, handleDelete) {
+export function getColumns(type, handleDelete, onDeleteDialogChange) {
   const expenseFields = [
     "date",
     "business",
@@ -91,6 +91,7 @@ export function getColumns(type, handleDelete) {
         <DeleteCell
           row={info.row}
           onDelete={handleDelete}
+          onDeleteDialogChange={onDeleteDialogChange}
         />
       ),
     },
