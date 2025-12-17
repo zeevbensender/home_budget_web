@@ -6,32 +6,30 @@ export default function DeleteCell({ row, onDelete, onDeleteDialogChange }) {
   const [confirm, setConfirm] = useState(false);
   const isMobile = useIsMobile();
 
+  const notifyDialogChange = (isOpen) => {
+    // Notify parent when dialog state changes (only on mobile)
+    if (isMobile && onDeleteDialogChange) {
+      onDeleteDialogChange(isOpen);
+    }
+  };
+
   const handleTrashClick = (e) => {
     e.stopPropagation();
     setConfirm(true);
-    // Notify parent when dialog opens (only on mobile)
-    if (isMobile && onDeleteDialogChange) {
-      onDeleteDialogChange(true);
-    }
+    notifyDialogChange(true);
   };
 
   const handleDelete = (e) => {
     e?.stopPropagation();
     onDelete(row.original.id);
     setConfirm(false);
-    // Notify parent when dialog closes (only on mobile)
-    if (isMobile && onDeleteDialogChange) {
-      onDeleteDialogChange(false);
-    }
+    notifyDialogChange(false);
   };
 
   const handleCancel = (e) => {
     e?.stopPropagation();
     setConfirm(false);
-    // Notify parent when dialog closes (only on mobile)
-    if (isMobile && onDeleteDialogChange) {
-      onDeleteDialogChange(false);
-    }
+    notifyDialogChange(false);
   };
 
   // Mobile: Use modal
