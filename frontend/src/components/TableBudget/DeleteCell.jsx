@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import useIsMobile from "../../hooks/useIsMobile.js";
 import DeleteConfirmModal from "./DeleteConfirmModal.jsx";
 
@@ -6,27 +6,32 @@ export default function DeleteCell({ row, onDelete, onDeleteDialogChange }) {
   const [confirm, setConfirm] = useState(false);
   const isMobile = useIsMobile();
 
-  useEffect(() => {
-    // Notify parent when dialog state changes (only on mobile)
-    if (isMobile && onDeleteDialogChange) {
-      onDeleteDialogChange(confirm);
-    }
-  }, [confirm, isMobile, onDeleteDialogChange]);
-
   const handleTrashClick = (e) => {
     e.stopPropagation();
     setConfirm(true);
+    // Notify parent when dialog opens (only on mobile)
+    if (isMobile && onDeleteDialogChange) {
+      onDeleteDialogChange(true);
+    }
   };
 
   const handleDelete = (e) => {
     e?.stopPropagation();
     onDelete(row.original.id);
     setConfirm(false);
+    // Notify parent when dialog closes (only on mobile)
+    if (isMobile && onDeleteDialogChange) {
+      onDeleteDialogChange(false);
+    }
   };
 
   const handleCancel = (e) => {
     e?.stopPropagation();
     setConfirm(false);
+    // Notify parent when dialog closes (only on mobile)
+    if (isMobile && onDeleteDialogChange) {
+      onDeleteDialogChange(false);
+    }
   };
 
   // Mobile: Use modal

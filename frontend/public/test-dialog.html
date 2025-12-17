@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Delete Dialog</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 375px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            padding: 12px 8px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        .delete-icon {
+            cursor: pointer;
+            font-size: 18px;
+            opacity: 0.4;
+            user-select: none;
+        }
+        .fab-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: #0d6efd;
+            color: white;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.3s, visibility 0.3s, transform 0.3s;
+        }
+        .fab-btn.hidden {
+            opacity: 0;
+            visibility: hidden;
+            transform: scale(0.8);
+        }
+        .dcm-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: flex-end;
+            z-index: 1000;
+        }
+        .dcm-sheet {
+            background: white;
+            width: 100%;
+            padding: 24px;
+            border-radius: 16px 16px 0 0;
+            animation: slideUp 0.3s ease-out;
+        }
+        @keyframes slideUp {
+            from {
+                transform: translateY(100%);
+            }
+            to {
+                transform: translateY(0);
+            }
+        }
+        .dcm-handle {
+            width: 40px;
+            height: 4px;
+            background: #ddd;
+            border-radius: 2px;
+            margin: 0 auto 16px;
+        }
+        .dcm-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .dcm-message {
+            color: #666;
+            margin-bottom: 24px;
+        }
+        .dcm-buttons {
+            display: flex;
+            gap: 12px;
+        }
+        .dcm-buttons button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        .dcm-cancel {
+            background: #6c757d;
+            color: white;
+        }
+        .dcm-delete {
+            background: #dc3545;
+            color: white;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h3>Expenses</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Business</th>
+                    <th>Amount</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>12-15</td>
+                    <td>Grocery Store</td>
+                    <td>$125.50</td>
+                    <td><span class="delete-icon" onclick="openDialog()">🗑️</span></td>
+                </tr>
+                <tr>
+                    <td>12-16</td>
+                    <td>Gas Station</td>
+                    <td>$45.00</td>
+                    <td><span class="delete-icon" onclick="openDialog()">🗑️</span></td>
+                </tr>
+                <tr>
+                    <td>12-17</td>
+                    <td>Restaurant</td>
+                    <td>$67.80</td>
+                    <td><span class="delete-icon" onclick="openDialog()">🗑️</span></td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <button id="addBtn" class="fab-btn">📝</button>
+        
+        <div id="deleteModal" class="dcm-overlay hidden" onclick="closeDialog(event)">
+            <div class="dcm-sheet" onclick="event.stopPropagation()">
+                <div class="dcm-handle"></div>
+                <h5 class="dcm-title">Delete Transaction?</h5>
+                <p class="dcm-message">This action cannot be undone.</p>
+                <div class="dcm-buttons">
+                    <button class="dcm-cancel" onclick="closeDialog()">Cancel</button>
+                    <button class="dcm-delete" onclick="deleteItem()">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function openDialog() {
+            console.log('Opening dialog');
+            document.getElementById('deleteModal').classList.remove('hidden');
+            document.getElementById('addBtn').classList.add('hidden');
+        }
+        
+        function closeDialog(event) {
+            if (event) {
+                event.stopPropagation();
+            }
+            console.log('Closing dialog');
+            document.getElementById('deleteModal').classList.add('hidden');
+            document.getElementById('addBtn').classList.remove('hidden');
+        }
+        
+        function deleteItem() {
+            console.log('Item deleted');
+            closeDialog();
+        }
+    </script>
+</body>
+</html>
