@@ -14,7 +14,7 @@ export default function DeleteCell({ row, onDelete, onDeleteDialogChange }) {
       return;
     }
     
-    // Notify parent when dialog state changes (only on mobile)
+    // Notify parent when dialog state changes (mobile only)
     if (isMobile && onDeleteDialogChange) {
       onDeleteDialogChange(confirm);
     }
