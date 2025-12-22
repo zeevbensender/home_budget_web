@@ -84,22 +84,32 @@ export function transactionsApi(type) {
      * Delete a single transaction
      * @param {number|string} id - Transaction ID
      */
-    remove: (id) => {
-      return fetch(`${BASE_URL}/${type}/${id}`, {
+    remove: async (id) => {
+      const res = await fetch(`${BASE_URL}/${type}/${id}`, {
         method: "DELETE",
       });
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(`HTTP ${res.status}: ${text}`);
+      }
+      return res.ok;
     },
 
     /**
      * Delete multiple transactions at once
      * @param {Array<number|string>} ids - Array of transaction IDs
      */
-    bulkRemove: (ids) => {
-      return fetch(`${BASE_URL}/${type}/bulk-delete`, {
+    bulkRemove: async (ids) => {
+      const res = await fetch(`${BASE_URL}/${type}/bulk-delete`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ids }),
       });
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(`HTTP ${res.status}: ${text}`);
+      }
+      return res.ok;
     },
   };
 }
