@@ -21,7 +21,6 @@ import {
 
 import AddRow from "./AddRow.jsx";
 import { getColumns } from "./columns.jsx";
-import { transactionsApi } from "../../api/transactions.js";
 
 export default function TableBudget({
   data,
@@ -29,8 +28,8 @@ export default function TableBudget({
   showAdd,
   onCloseAdd,
   onCreateLocal,
-  onLocalDelete,
-  onLocalDeleteBulk,
+  onLocalDelete,       // Function to delete single item (handles both API and state)
+  onLocalDeleteBulk,   // Function to bulk delete items (handles both API and state)
   onMobileEdit,
   onDeleteDialogChange,
 }) {
@@ -38,24 +37,20 @@ export default function TableBudget({
   const [selectMode, setSelectMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState([]);
 
-  // Create API instance for this transaction type
-  const api = useMemo(() => transactionsApi(type), [type]);
-
   useEffect(() => {
     setTableData(data);
   }, [data]);
 
   // ----------------------------------------------------
-  // DELETE (single) - Using generic API
+  // DELETE (single) - Delegates to parent callback
   // ----------------------------------------------------
   const handleDelete = useCallback(async (id) => {
     try {
-      await api.remove(id);
-      onLocalDelete(id);
+      await onLocalDelete(id);
     } catch (err) {
       console.error("Delete error:", err);
     }
-  }, [api, onLocalDelete]);
+  }, [onLocalDelete]);
 
   // ----------------------------------------------------
   // Columns
@@ -117,14 +112,13 @@ export default function TableBudget({
   });
 
   // ----------------------------------------------------
-  // BULK DELETE - Using generic API
+  // BULK DELETE - Delegates to parent callback
   // ----------------------------------------------------
   const handleBulkDelete = async () => {
     if (selectedIds.length === 0) return;
 
     try {
-      await api.bulkRemove(selectedIds);
-      onLocalDeleteBulk(selectedIds);
+      await onLocalDeleteBulk(selectedIds);
       setSelectMode(false);
       setSelectedIds([]);
     } catch (err) {
