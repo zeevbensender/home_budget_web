@@ -18,7 +18,7 @@
  *   toast.type // 'success', 'error', or 'info'
  */
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 
 /**
  * Custom hook for managing toast notifications
@@ -30,6 +30,15 @@ export function useToast(defaultTimeout = 3000) {
   const [message, setMessage] = useState(null);
   const [type, setType] = useState('info');
   const timeoutRef = useRef(null);
+
+  // Cleanup timeout on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
 
   /**
    * Show a toast message

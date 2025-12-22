@@ -28,7 +28,7 @@
  *   await expenses.refresh(); // re-fetch from server
  */
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { transactionsApi } from '../api/transactions.js';
 
 /**
@@ -38,7 +38,9 @@ import { transactionsApi } from '../api/transactions.js';
  * @returns {object} Transaction state and operations
  */
 export function useTransactions(type) {
-  const api = transactionsApi(type);
+  // Memoize API instance to avoid recreation on every render
+  const api = useMemo(() => transactionsApi(type), [type]);
+  
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
