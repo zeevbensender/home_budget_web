@@ -1,3 +1,17 @@
+/**
+ * TableBudget component
+ * 
+ * Generic table component for displaying and managing transactions (expenses or incomes).
+ * Supports both desktop (inline editing) and mobile (tap to edit) interactions.
+ * 
+ * Features:
+ * - Inline add row (desktop)
+ * - Single and bulk delete operations
+ * - Select mode for bulk operations
+ * - Mobile-friendly tap interaction
+ * - Generic implementation works for both expenses and incomes
+ */
+
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import {
   useReactTable,
@@ -6,15 +20,8 @@ import {
 } from "@tanstack/react-table";
 
 import AddRow from "./AddRow.jsx";
-import DeleteCell from "./DeleteCell.jsx";
 import { getColumns } from "./columns.jsx";
-
-import {
-  deleteExpense,
-  deleteIncome,
-  bulkDeleteExpenses,
-  bulkDeleteIncomes,
-} from "../../api.js";
+import { transactionsApi } from "../../api/transactions.js";
 
 export default function TableBudget({
   data,
@@ -28,29 +35,27 @@ export default function TableBudget({
   onDeleteDialogChange,
 }) {
   const [tableData, setTableData] = useState(data);
-
   const [selectMode, setSelectMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState([]);
+
+  // Create API instance for this transaction type
+  const api = useMemo(() => transactionsApi(type), [type]);
 
   useEffect(() => {
     setTableData(data);
   }, [data]);
 
   // ----------------------------------------------------
-  // DELETE (single)
+  // DELETE (single) - Using generic API
   // ----------------------------------------------------
   const handleDelete = useCallback(async (id) => {
     try {
-      if (type === "expense") {
-        await deleteExpense(id);
-      } else {
-        await deleteIncome(id);
-      }
+      await api.remove(id);
       onLocalDelete(id);
     } catch (err) {
       console.error("Delete error:", err);
     }
-  }, [type, onLocalDelete]);
+  }, [api, onLocalDelete]);
 
   // ----------------------------------------------------
   // Columns
@@ -112,18 +117,13 @@ export default function TableBudget({
   });
 
   // ----------------------------------------------------
-  // BULK DELETE
+  // BULK DELETE - Using generic API
   // ----------------------------------------------------
   const handleBulkDelete = async () => {
     if (selectedIds.length === 0) return;
 
     try {
-      if (type === "expense") {
-        await bulkDeleteExpenses(selectedIds);
-      } else {
-        await bulkDeleteIncomes(selectedIds);
-      }
-
+      await api.bulkRemove(selectedIds);
       onLocalDeleteBulk(selectedIds);
       setSelectMode(false);
       setSelectedIds([]);
