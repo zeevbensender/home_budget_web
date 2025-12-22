@@ -1,3 +1,17 @@
+/**
+ * TableBudget component
+ * 
+ * Generic table component for displaying and managing transactions (expenses or incomes).
+ * Supports both desktop (inline editing) and mobile (tap to edit) interactions.
+ * 
+ * Features:
+ * - Inline add row (desktop)
+ * - Single and bulk delete operations
+ * - Select mode for bulk operations
+ * - Mobile-friendly tap interaction
+ * - Generic implementation works for both expenses and incomes
+ */
+
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import {
   useReactTable,
@@ -6,15 +20,7 @@ import {
 } from "@tanstack/react-table";
 
 import AddRow from "./AddRow.jsx";
-import DeleteCell from "./DeleteCell.jsx";
 import { getColumns } from "./columns.jsx";
-
-import {
-  deleteExpense,
-  deleteIncome,
-  bulkDeleteExpenses,
-  bulkDeleteIncomes,
-} from "../../api.js";
 
 export default function TableBudget({
   data,
@@ -22,13 +28,12 @@ export default function TableBudget({
   showAdd,
   onCloseAdd,
   onCreateLocal,
-  onLocalDelete,
-  onLocalDeleteBulk,
+  onLocalDelete,       // Function to delete single item (handles both API and state)
+  onLocalDeleteBulk,   // Function to bulk delete items (handles both API and state)
   onMobileEdit,
   onDeleteDialogChange,
 }) {
   const [tableData, setTableData] = useState(data);
-
   const [selectMode, setSelectMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState([]);
 
@@ -37,20 +42,15 @@ export default function TableBudget({
   }, [data]);
 
   // ----------------------------------------------------
-  // DELETE (single)
+  // DELETE (single) - Delegates to parent callback
   // ----------------------------------------------------
   const handleDelete = useCallback(async (id) => {
     try {
-      if (type === "expense") {
-        await deleteExpense(id);
-      } else {
-        await deleteIncome(id);
-      }
-      onLocalDelete(id);
+      await onLocalDelete(id);
     } catch (err) {
       console.error("Delete error:", err);
     }
-  }, [type, onLocalDelete]);
+  }, [onLocalDelete]);
 
   // ----------------------------------------------------
   // Columns
@@ -112,19 +112,13 @@ export default function TableBudget({
   });
 
   // ----------------------------------------------------
-  // BULK DELETE
+  // BULK DELETE - Delegates to parent callback
   // ----------------------------------------------------
   const handleBulkDelete = async () => {
     if (selectedIds.length === 0) return;
 
     try {
-      if (type === "expense") {
-        await bulkDeleteExpenses(selectedIds);
-      } else {
-        await bulkDeleteIncomes(selectedIds);
-      }
-
-      onLocalDeleteBulk(selectedIds);
+      await onLocalDeleteBulk(selectedIds);
       setSelectMode(false);
       setSelectedIds([]);
     } catch (err) {
