@@ -17,6 +17,11 @@ export default function App() {
   const isMobile = useIsMobile();
 
   // ---------------------------
+  // DELETE DIALOG STATE
+  // ---------------------------
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
+  // ---------------------------
   // MOBILE MODAL STATE
   // ---------------------------
   const [mobileModalOpen, setMobileModalOpen] = useState(false);
@@ -153,6 +158,7 @@ export default function App() {
             onLocalDelete={deleteLocalExpense}
             onLocalDeleteBulk={deleteLocalExpenseBulk}
             onMobileEdit={handleMobileEdit}
+            onDeleteDialogChange={setDeleteDialogOpen}
           />
         </div>
 
@@ -180,6 +186,7 @@ export default function App() {
             onLocalDelete={deleteLocalIncome}
             onLocalDeleteBulk={deleteLocalIncomeBulk}
             onMobileEdit={handleMobileEdit}
+            onDeleteDialogChange={setDeleteDialogOpen}
           />
         </div>
 
@@ -195,7 +202,7 @@ export default function App() {
       </div>
 
       {/* MOBILE FLOATING ACTION BUTTON */}
-      {isMobile && (
+      {isMobile && !deleteDialogOpen && (
         <AddFloatingButton
           onClick={handleMobileAddClick}
           title="Add"

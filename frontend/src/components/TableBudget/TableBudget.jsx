@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import {
   useReactTable,
   getCoreRowModel,
@@ -25,6 +25,7 @@ export default function TableBudget({
   onLocalDelete,
   onLocalDeleteBulk,
   onMobileEdit,
+  onDeleteDialogChange,
 }) {
   const [tableData, setTableData] = useState(data);
 
@@ -38,7 +39,7 @@ export default function TableBudget({
   // ----------------------------------------------------
   // DELETE (single)
   // ----------------------------------------------------
-  const handleDelete = async (id) => {
+  const handleDelete = useCallback(async (id) => {
     try {
       if (type === "expense") {
         await deleteExpense(id);
@@ -49,14 +50,14 @@ export default function TableBudget({
     } catch (err) {
       console.error("Delete error:", err);
     }
-  };
+  }, [type, onLocalDelete]);
 
   // ----------------------------------------------------
   // Columns
   // ----------------------------------------------------
   const baseColumns = useMemo(
-    () => getColumns(type, handleDelete),
-    [type]
+    () => getColumns(type, handleDelete, onDeleteDialogChange),
+    [type, handleDelete, onDeleteDialogChange]
   );
 
   const columns = useMemo(() => {
