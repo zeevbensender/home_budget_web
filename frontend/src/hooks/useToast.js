@@ -18,7 +18,7 @@
  *   toast.type // 'success', 'error', or 'info'
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 
 /**
  * Custom hook for managing toast notifications
@@ -29,6 +29,7 @@ import { useState, useCallback } from 'react';
 export function useToast(defaultTimeout = 3000) {
   const [message, setMessage] = useState(null);
   const [type, setType] = useState('info');
+  const timeoutRef = useRef(null);
 
   /**
    * Show a toast message
@@ -38,9 +39,19 @@ export function useToast(defaultTimeout = 3000) {
    * @param {number} timeout - Auto-dismiss timeout in ms (uses defaultTimeout if not specified)
    */
   const show = useCallback((msg, t = 'info', timeout = defaultTimeout) => {
+    // Clear any existing timeout to prevent race conditions
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+
     setMessage(msg);
     setType(t);
-    setTimeout(() => setMessage(null), timeout);
+    
+    // Set new timeout
+    timeoutRef.current = setTimeout(() => {
+      setMessage(null);
+      timeoutRef.current = null;
+    }, timeout);
   }, [defaultTimeout]);
 
   return { message, type, show };

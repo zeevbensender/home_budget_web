@@ -23,6 +23,7 @@ const BASE_URL =
 
 /**
  * Generic request helper with error handling
+ * Handles both JSON responses and non-JSON responses (like DELETE)
  */
 async function request(url, options = {}) {
   const res = await fetch(url, options);
@@ -30,7 +31,16 @@ async function request(url, options = {}) {
     const text = await res.text();
     throw new Error(`HTTP ${res.status}: ${text}`);
   }
-  return res.json().catch(() => null);
+  
+  // For DELETE requests and other methods that may not return JSON,
+  // check content type before parsing
+  const contentType = res.headers.get('content-type');
+  if (contentType && contentType.includes('application/json')) {
+    return res.json();
+  }
+  
+  // Return true for successful non-JSON responses (like DELETE)
+  return true;
 }
 
 /**
@@ -84,32 +94,22 @@ export function transactionsApi(type) {
      * Delete a single transaction
      * @param {number|string} id - Transaction ID
      */
-    remove: async (id) => {
-      const res = await fetch(`${BASE_URL}/${type}/${id}`, {
+    remove: (id) => {
+      return request(`${BASE_URL}/${type}/${id}`, {
         method: "DELETE",
       });
-      if (!res.ok) {
-        const text = await res.text();
-        throw new Error(`HTTP ${res.status}: ${text}`);
-      }
-      return res.ok;
     },
 
     /**
      * Delete multiple transactions at once
      * @param {Array<number|string>} ids - Array of transaction IDs
      */
-    bulkRemove: async (ids) => {
-      const res = await fetch(`${BASE_URL}/${type}/bulk-delete`, {
+    bulkRemove: (ids) => {
+      return request(`${BASE_URL}/${type}/bulk-delete`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ids }),
       });
-      if (!res.ok) {
-        const text = await res.text();
-        throw new Error(`HTTP ${res.status}: ${text}`);
-      }
-      return res.ok;
     },
   };
 }
