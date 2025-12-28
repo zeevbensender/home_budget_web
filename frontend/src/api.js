@@ -1,93 +1,68 @@
-// FRONTEND/src/api.js
+/**
+ * FRONTEND/src/api.js
+ * 
+ * This file maintains backward compatibility for existing code while
+ * delegating to the new generic transactions API.
+ * 
+ * The new recommended approach is to use the generic transactionsApi directly:
+ *   import { transactionsApi } from './api/transactions.js';
+ *   const api = transactionsApi('expense');
+ *   await api.list();
+ */
+
+import { transactionsApi } from './api/transactions.js';
+
+// Create API instances for each transaction type
+const expenseApi = transactionsApi('expense');
+const incomeApi = transactionsApi('income');
+
+// Export the generic API for direct use
+export { transactionsApi };
 
 // ----------------------------------------------
-// Determine API base URL
-// ----------------------------------------------
-const BASE_URL =
-  import.meta.env.VITE_REACT_APP_API_URL ||
-  `http://${window.location.hostname}:8000/api/v1`;
-
-async function request(url, options = {}) {
-  const res = await fetch(url, options);
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`HTTP ${res.status}: ${text}`);
-  }
-  return res.json().catch(() => null);
-}
-
-// ----------------------------------------------
-// EXPENSES
+// EXPENSES (legacy compatibility)
 // ----------------------------------------------
 
 export function getExpenses() {
-  return request(`${BASE_URL}/expense`);
+  return expenseApi.list();
 }
 
 export function createExpense(data) {
-  return request(`${BASE_URL}/expense`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
+  return expenseApi.create(data);
 }
 
 export function updateExpense(id, data) {
-  return request(`${BASE_URL}/expense/${id}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
+  return expenseApi.update(id, data);
 }
 
 export function deleteExpense(id) {
-  return fetch(`${BASE_URL}/expense/${id}`, {
-    method: "DELETE",
-  });
+  return expenseApi.remove(id);
 }
 
 export function bulkDeleteExpenses(ids) {
-  return fetch(`${BASE_URL}/expense/bulk-delete`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ ids }),
-  });
+  return expenseApi.bulkRemove(ids);
 }
 
 // ----------------------------------------------
-// INCOME
+// INCOME (legacy compatibility)
 // ----------------------------------------------
 
 export function getIncomes() {
-  return request(`${BASE_URL}/income`);
+  return incomeApi.list();
 }
 
 export function createIncome(data) {
-  return request(`${BASE_URL}/income`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
+  return incomeApi.create(data);
 }
 
 export function updateIncome(id, data) {
-  return request(`${BASE_URL}/income/${id}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
+  return incomeApi.update(id, data);
 }
 
 export function deleteIncome(id) {
-  return fetch(`${BASE_URL}/income/${id}`, {
-    method: "DELETE",
-  });
+  return incomeApi.remove(id);
 }
 
 export function bulkDeleteIncomes(ids) {
-  return fetch(`${BASE_URL}/income/bulk-delete`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ ids }),
-  });
+  return incomeApi.bulkRemove(ids);
 }
