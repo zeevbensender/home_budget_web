@@ -61,6 +61,7 @@ export function getColumns(type, handleUpdate, handleDelete, onDeleteDialogChang
       cell: (info) => {
         let value = info.getValue();
         const rowId = info.row.original.id;
+        const originalDate = info.row.original.date;
 
         if (field === "date") {
           value = formatDateShort(value);
@@ -81,11 +82,15 @@ export function getColumns(type, handleUpdate, handleDelete, onDeleteDialogChang
               let finalValue = newValue;
               
               if (fieldName === "date") {
-                // Convert MM-DD back to YYYY-MM-DD
-                const year = new Date().getFullYear();
+                // Convert MM-DD back to YYYY-MM-DD, preserving the original year
+                const year = originalDate ? originalDate.split("-")[0] : new Date().getFullYear();
                 const [month, day] = newValue.split("-");
-                if (month && day) {
+                if (month && day && month.length === 2 && day.length === 2) {
                   finalValue = `${year}-${month}-${day}`;
+                } else {
+                  // If invalid format, use the original value
+                  console.warn(`Invalid date format: ${newValue}`);
+                  return;
                 }
               } else if (fieldName === "amount") {
                 // Remove commas from formatted amount
