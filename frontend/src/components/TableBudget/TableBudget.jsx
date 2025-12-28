@@ -28,6 +28,7 @@ export default function TableBudget({
   showAdd,
   onCloseAdd,
   onCreateLocal,
+  onUpdate,            // Function to update a single item (handles both API and state)
   onLocalDelete,       // Function to delete single item (handles both API and state)
   onLocalDeleteBulk,   // Function to bulk delete items (handles both API and state)
   onMobileEdit,
@@ -53,11 +54,24 @@ export default function TableBudget({
   }, [onLocalDelete]);
 
   // ----------------------------------------------------
+  // UPDATE (single cell) - Delegates to parent callback
+  // ----------------------------------------------------
+  const handleUpdate = useCallback(async (id, field, value) => {
+    if (!onUpdate) return;
+    
+    try {
+      await onUpdate(id, { [field]: value });
+    } catch (err) {
+      console.error("Update error:", err);
+    }
+  }, [onUpdate]);
+
+  // ----------------------------------------------------
   // Columns
   // ----------------------------------------------------
   const baseColumns = useMemo(
-    () => getColumns(type, handleDelete, onDeleteDialogChange),
-    [type, handleDelete, onDeleteDialogChange]
+    () => getColumns(type, handleUpdate, handleDelete, onDeleteDialogChange),
+    [type, handleUpdate, handleDelete, onDeleteDialogChange]
   );
 
   const columns = useMemo(() => {
