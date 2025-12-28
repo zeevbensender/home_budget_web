@@ -146,6 +146,7 @@ export default function App() {
             showAdd={showAddExpense}
             onCloseAdd={() => setShowAddExpense(false)}
             onCreateLocal={addExpenseLocal}
+            onUpdate={expenses.update}
             onLocalDelete={expenses.remove}
             onLocalDeleteBulk={expenses.bulkRemove}
             onMobileEdit={handleMobileEdit}
@@ -174,6 +175,7 @@ export default function App() {
             showAdd={showAddIncome}
             onCloseAdd={() => setShowAddIncome(false)}
             onCreateLocal={addIncomeLocal}
+            onUpdate={incomes.update}
             onLocalDelete={incomes.remove}
             onLocalDeleteBulk={incomes.bulkRemove}
             onMobileEdit={handleMobileEdit}

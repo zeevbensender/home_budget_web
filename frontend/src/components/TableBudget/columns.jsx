@@ -20,7 +20,7 @@ function formatAmount(value) {
   }).format(Number(value));
 }
 
-export function getColumns(type, handleDelete, onDeleteDialogChange) {
+export function getColumns(type, handleUpdate, handleDelete, onDeleteDialogChange) {
   const expenseFields = [
     "date",
     "business",
@@ -60,6 +60,7 @@ export function getColumns(type, handleDelete, onDeleteDialogChange) {
 
       cell: (info) => {
         let value = info.getValue();
+        const rowId = info.row.original.id;
 
         if (field === "date") {
           value = formatDateShort(value);
@@ -75,6 +76,24 @@ export function getColumns(type, handleDelete, onDeleteDialogChange) {
             row={info.row}
             field={field}
             type={type}
+            updateCell={(_, fieldName, newValue) => {
+              // Reconstruct the full value for special fields
+              let finalValue = newValue;
+              
+              if (fieldName === "date") {
+                // Convert MM-DD back to YYYY-MM-DD
+                const year = new Date().getFullYear();
+                const [month, day] = newValue.split("-");
+                if (month && day) {
+                  finalValue = `${year}-${month}-${day}`;
+                }
+              } else if (fieldName === "amount") {
+                // Remove commas from formatted amount
+                finalValue = newValue.replace(/,/g, "");
+              }
+              
+              handleUpdate(rowId, fieldName, finalValue);
+            }}
           />
         );
       },
